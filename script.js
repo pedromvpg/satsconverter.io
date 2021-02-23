@@ -9,122 +9,133 @@ $( document ).ready(function() {
   $.getJSON( "https://api.coindesk.com/v1/bpi/currentprice.json", function( data ) {
 
 
-
         console.log(data.bpi);
         btcusd = data.bpi.USD.rate_float;
         btceur = data.bpi.EUR.rate_float;
         btcgbp = data.bpi.GBP.rate_float;
 
 
+        var input_sat, input_btc, input_usd, input_eur, input_gbp,
+            output_sat, output_btc, output_usd, output_eur, output_yuan;
+
+
+
+        $("#input_sat").keyup(function() {
+            calc('sats');
+        });
+        $("#input_btc").keyup(function() {
+            calc('btc');
+        });
+        $("#input_usd").keyup(function() {
+            calc('usd');
+        });
+        $("#input_eur").keyup(function() {
+            calc('eur');
+        });
+        $("#input_gbp").keyup(function() {
+            calc('gbp');
+        });
+
+
+        $("#input_sat").change(function() {
+            calc('sats');
+        });
+        $("#input_btc").change(function() {
+            calc('btc');
+        });
+        $("#input_usd").change(function() {
+            calc('usd');
+        });
+        $("#input_eur").change(function() {
+            calc('eur');
+        });
+        $("#input_gbp").change(function() {
+            calc('gbp');
+        });
+
+
+        calc();
+
+
+        $("input").on("click", function () {
+         //$(this).select();
+        });
+
+
+
+        function calc(source){
+
+          // /$("#satsusd").text(addCommas(btcusd100000000));
+
+
+          if (source === undefined){
+
+            input_sat = removeCommas($("#input_sat").val());
+            console.log("-> " + input_sat);
+
+            //$("#input_sat").focus();
+
+            output_sat = removeCommas(input_sat);
+            output_btc = output_sat/100000000;
+            output_usd = btcusd*output_btc;
+            output_eur = output_btc*btceur;
+            output_gdp = output_btc*btcgbp;
 
 
 
 
 
-      var input_sat, input_btc, input_usd, input_eur, input_gbp,
-          output_sat, output_btc, output_usd, output_eur, output_yuan;
+          } else{
 
+            input_sat = removeCommas($("#input_sat").val());
+            input_btc = removeCommas($("#input_btc").val());
+            input_usd = removeCommas($("#input_usd").val());
+            input_eur = removeCommas($("#input_eur").val());
+            input_gbp = removeCommas($("#input_gbp").val());
 
-
-
-
-
-
-      $("#input_sat").keyup(function() {
-          calc('sats');
-      });
-
-      $("#input_btc").keyup(function() {
-          calc('btc');
-      });
-
-      $("#input_usd").keyup(function() {
-          calc('usd');
-      });
-
-
-      $("#input_sat").change(function() {
-          calc('sats');
-      });
-
-      $("#input_btc").change(function() {
-          calc('btc');
-      });
-
-      $("#input_usd").change(function() {
-          calc('usd');
-      });
-
-      calc();
-
-
-      $("input").on("click", function () {
-       //$(this).select();
-      });
-
-
-
-      function calc(source){
-
-        // /$("#satsusd").text(addCommas(btcusd100000000));
-
-
-        if (source === undefined){
-
-          input_sat = removeCommas($("#input_sat").val());
-          console.log("-> " + input_sat);
-
-          //$("#input_sat").focus();
-
-          output_sat = removeCommas(input_sat);
-          output_btc = output_sat/100000000;
-          output_usd = btcusd*output_btc;
-          output_eur = output_btc*btceur;
-          output_gdp = output_btc*btcgbp;
-
-
-
-
-
-        } else{
-
-          input_sat = removeCommas($("#input_sat").val());
-          input_btc = removeCommas($("#input_btc").val());
-          input_usd = removeCommas($("#input_usd").val());
-          input_eur = removeCommas($("#input_eur").val());
-          input_gbp = removeCommas($("#input_gbp").val());
-
-          if (source == 'sats'){
-              console.log('sats');
-              output_sat = input_sat;
-              output_btc = output_sat/100000000;
-              output_usd = btcusd*output_btc;
-              output_eur = output_btc*btceur;
-              output_gdp = output_btc*btcgbp;
-          } else if (source == 'btc'){
-              console.log('btc');
-              output_btc = input_btc;
-              output_sat = output_btc*100000000;
-              output_usd = btcusd*output_btc;
-              output_eur = output_btc*btceur;
-              output_gdp = output_btc*btcgbp;
-          } else if (source == 'usd'){
-              console.log('usd');
-              output_usd = input_usd;
-              output_sat = output_usd/(btcusd/input_usd)*100000000;
-              output_btc = output_usd/(btcusd/input_usd);
-              output_eur = output_btc*btceur;
-              output_gdp = output_btc*btcgbp;
+            if (source == 'sats'){
+                console.log('sats');
+                output_sat = input_sat;
+                output_btc = output_sat/100000000;
+                output_usd = btcusd*output_btc;
+                output_eur = output_btc*btceur;
+                output_gdp = output_btc*btcgbp;
+            } else if (source == 'btc'){
+                console.log('btc');
+                output_btc = input_btc;
+                output_sat = output_btc*100000000;
+                output_usd = btcusd*output_btc;
+                output_eur = output_btc*btceur;
+                output_gdp = output_btc*btcgbp;
+            } else if (source == 'usd'){
+                console.log('usd');
+                output_usd = input_usd;
+                output_sat = output_usd/(btcusd/input_usd)*100000000;
+                output_btc = output_usd/(btcusd/input_usd);
+                output_eur = output_btc*btceur;
+                output_gdp = output_btc*btcgbp;
+            } else if (source == 'eur'){
+                console.log('eur');
+                output_eur = input_eur;
+                output_sat = output_eur/(btcusd/input_eur)*100000000;
+                output_btc = output_eur/(btcusd/input_eur);
+                output_usd = output_btc*btcusd;
+                output_gdp = output_btc*btcgbp;
+            } else if (source == 'gdp'){
+                console.log('gdp');
+                output_gdp = input_gdp;
+                output_sat = output_gdp/(btcusd/input_gdp)*100000000;
+                output_btc = output_usd/(btcusd/input_usd);
+                output_usd = output_btc*btcusd;
+                output_eur = output_btc*btceur;
+            }
           }
-        }
 
-
-        output_sat = output_sat.toFixed(0);
-        output_usd = output_usd.toFixed(2);
-        output_eur = output_eur.toFixed(2);
-        output_gdp = output_gdp.toFixed(2);
-
-
+          output_btc = output_btc.toFixed(8);
+          output_sat = output_sat.toFixed(0);
+          output_usd = output_usd.toFixed(2);
+          output_eur = output_eur.toFixed(2);
+          output_gdp = output_gdp.toFixed(2);
 
 
           $("#input_sat").val(addCommas(output_sat)).text(addCommas(output_sat));
@@ -134,30 +145,31 @@ $( document ).ready(function() {
           $("#input_gbp").val(addCommas(output_gdp)).text(addCommas(output_gdp));
 
 
-      }
-
-
-
-      var satPerUSD = 1/(btcusd/1)*100000000;
-      $("#satsusd").text( satPerUSD.toFixed(0) );
-
-
-      function addCommas(x) {
-          var parts = x.toString().split(".");
-          parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-          return parts.join(".");
-      }
-
-      function removeCommas(x) {
-        console.log('ddd' + x);
-        if (typeof x === 'string' || x instanceof String){
-          return parseFloat(x.replace(',', ''));
-        }  else {
-          return parseFloat(x);
         }
 
-      }
 
-});
+
+        var satPerUSD = 1/(btcusd/1)*100000000;
+        $("#satsusd").text( satPerUSD.toFixed(0) );
+
+
+        function addCommas(x) {
+            //var parts = x.toString().split(".");
+            //parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+            //return parts.join(".");
+            return x;
+        }
+
+        function removeCommas(x) {
+          console.log('ddd' + x);
+          if (typeof x === 'string' || x instanceof String){
+            return parseFloat(x.replace(',', ''));
+          }  else {
+            return parseFloat(x);
+          }
+
+        }
+
+  });
 
 });
