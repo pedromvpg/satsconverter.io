@@ -86,8 +86,14 @@ body{
   #container {
     padding: 0em;
   }
+  .value-input {
+    padding: 1rem 0 0 0;
+  }
+  .value-label {
+    margin-bottom: 0.3rem;
+  }
   .value-input:focus {
-    font-size: 150%;
+    font-size: 200%;
   }
 }
 
