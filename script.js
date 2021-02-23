@@ -161,13 +161,11 @@ $( document ).ready(function() {
         }
 
         function removeCommas(x) {
-          console.log('ddd' + x);
           if (typeof x === 'string' || x instanceof String){
             return parseFloat(x.replace(',', ''));
           }  else {
             return parseFloat(x);
           }
-
         }
 
   });
