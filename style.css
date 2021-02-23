@@ -84,7 +84,10 @@ body{
 /* Smartphones (portrait and landscape) ----------- */
 @media only screen and (min-device-width : 320px) and (max-device-width : 480px) {
   #container {
-    padding: 1em;
+    padding: 0em;
+  }
+  .value-input:focus {
+    font-size: 150%;
   }
 }
 

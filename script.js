@@ -95,39 +95,39 @@ $( document ).ready(function() {
 
             if (source == 'sats'){
                 console.log('sats');
-                output_sat = input_sat;
-                output_btc = output_sat/100000000;
-                output_usd = btcusd*output_btc;
+                output_btc = input_sat/100000000;
+                output_sat = output_btc*100000000;
+                output_usd = output_btc*btcusd;
                 output_eur = output_btc*btceur;
                 output_gdp = output_btc*btcgbp;
             } else if (source == 'btc'){
                 console.log('btc');
                 output_btc = input_btc;
                 output_sat = output_btc*100000000;
-                output_usd = btcusd*output_btc;
+                output_usd = output_btc*btcusd;
                 output_eur = output_btc*btceur;
                 output_gdp = output_btc*btcgbp;
             } else if (source == 'usd'){
                 console.log('usd');
-                output_usd = input_usd;
-                output_sat = output_usd/(btcusd/input_usd)*100000000;
-                output_btc = output_usd/(btcusd/input_usd);
+                output_btc = input_usd/btcusd;
+                output_sat = output_btc*100000000;
+                output_usd = output_btc*btcusd;
                 output_eur = output_btc*btceur;
                 output_gdp = output_btc*btcgbp;
             } else if (source == 'eur'){
                 console.log('eur');
-                output_eur = input_eur;
-                output_sat = output_eur/(btcusd/input_eur)*100000000;
-                output_btc = output_eur/(btcusd/input_eur);
+                output_btc = input_eur/btceur;
+                output_sat = output_btc*100000000;
                 output_usd = output_btc*btcusd;
+                output_eur = output_btc*btceur;
                 output_gdp = output_btc*btcgbp;
             } else if (source == 'gdp'){
                 console.log('gdp');
-                output_gdp = input_gdp;
-                output_sat = output_gdp/(btcusd/input_gdp)*100000000;
-                output_btc = output_usd/(btcusd/input_usd);
+                output_btc = input_gbp/btcusd;
+                output_sat = output_btc*100000000;
                 output_usd = output_btc*btcusd;
                 output_eur = output_btc*btceur;
+                output_gdp = output_btc*btcgbp;
             }
           }
 
