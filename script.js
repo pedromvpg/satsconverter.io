@@ -59,7 +59,7 @@ $( document ).ready(function() {
 
 
       $("input").on("click", function () {
-       $(this).select();
+       //$(this).select();
       });
 
 
@@ -74,7 +74,7 @@ $( document ).ready(function() {
           input_sat = removeCommas($("#input_sat").val());
           console.log("-> " + input_sat);
 
-          $("#input_sat").focus();
+          //$("#input_sat").focus();
 
           output_sat = removeCommas(input_sat);
           output_btc = output_sat/100000000;
