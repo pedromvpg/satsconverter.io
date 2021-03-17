@@ -22,9 +22,11 @@ $( document ).ready(function() {
 
         $("#input_sat").keyup(function() {
             calc('sats');
+            FormatCurrency(this);
         });
         $("#input_btc").keyup(function() {
             calc('btc');
+            FormatCurrency(this);
         });
         $("#input_usd").keyup(function() {
             calc('usd');
@@ -65,7 +67,6 @@ $( document ).ready(function() {
 
         function calc(source){
 
-          // /$("#satsusd").text(addCommas(btcusd100000000));
 
 
           if (source === undefined){
@@ -131,19 +132,29 @@ $( document ).ready(function() {
             }
           }
 
-          output_btc = output_btc;
-          output_sat = output_sat.toFixed(0);
-          output_usd = output_usd.toFixed(2);
-          output_eur = output_eur.toFixed(2);
-          output_gbp = output_gbp.toFixed(2);
 
 
-          $("#input_sat").val(addCommas(output_sat)).text(addCommas(output_sat));
-          $("#input_btc").val(addCommas(output_btc)).text(addCommas(output_btc));
-          $("#input_usd").val(addCommas(output_usd)).text(addCommas(output_usd));
-          $("#input_eur").val(addCommas(output_eur)).text(addCommas(output_eur));
-          $("#input_gbp").val(addCommas(output_gbp)).text(addCommas(output_gbp));
 
+          if (source != 'sats'){
+            output_sat = parseInt(output_sat);
+            $("#input_sat").val(addCommas(output_sat)).text(addCommas(output_sat));
+          }
+          if (source != 'btc'){
+            output_btc = output_btc;
+            $("#input_btc").val(addCommas(output_btc)).text(addCommas(output_btc));
+          }
+          if (source != 'usd'){
+            output_usd = output_usd.toFixed(2);
+            $("#input_usd").val(addCommas(output_usd)).text(addCommas(output_usd));
+          }
+          if (source != 'eur'){
+            output_eur = output_eur.toFixed(2);
+            $("#input_eur").val(addCommas(output_eur)).text(addCommas(output_eur));
+          }
+          if (source != 'gbp'){
+            output_gbp = output_gbp.toFixed(2);
+            $("#input_gbp").val(addCommas(output_gbp)).text(addCommas(output_gbp));
+          }
 
         }
 
@@ -154,10 +165,10 @@ $( document ).ready(function() {
 
 
         function addCommas(x) {
-            //var parts = x.toString().split(".");
-            //parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-            //return parts.join(".");
-            return x;
+            var parts = x.toString().split(".");
+            parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+            return parts.join(".");
+            //return x;
         }
 
         function removeCommas(x) {
@@ -175,6 +186,46 @@ $( document ).ready(function() {
         }
 
 
+
+
+
+        function FormatCurrency(ctrl) {
+            //Check if arrow keys are pressed - we want to allow navigation around textbox using arrow keys
+            if (event.keyCode == 37 || event.keyCode == 38 || event.keyCode == 39 || event.keyCode == 40) {
+                return;
+            }
+
+            var val = ctrl.value;
+
+            val = val.replace(/,/g, "")
+            ctrl.value = "";
+            val += '';
+            x = val.split('.');
+            x1 = x[0];
+            x2 = x.length > 1 ? '.' + x[1] : '';
+
+            var rgx = /(\d+)(\d{3})/;
+
+            while (rgx.test(x1)) {
+                x1 = x1.replace(rgx, '$1' + ',' + '$2');
+            }
+
+            ctrl.value = x1 + x2;
+        }
+
+        function CheckNumeric() {
+            return event.keyCode >= 48 && event.keyCode <= 57 || event.keyCode == 46;
+        }
+
+
+
+
+
   });
 
 });
+
+var validate = function(e) {
+  var t = e.value;
+  e.value = (t.indexOf(".") >= 0) ? (t.substr(0, t.indexOf(".")) + t.substr(t.indexOf("."), 9)) : t;
+}

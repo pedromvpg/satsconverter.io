@@ -8,6 +8,12 @@ body{
 }
 
 
+
+a:link, a:visited, a:hover, a:active {
+  color: #555;
+}
+
+
 #logo{
   margin: 1rem;
   width: 60px;
