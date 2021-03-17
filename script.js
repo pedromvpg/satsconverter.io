@@ -79,7 +79,7 @@ $( document ).ready(function() {
             output_btc = output_sat/100000000;
             output_usd = btcusd*output_btc;
             output_eur = output_btc*btceur;
-            output_gdp = output_btc*btcgbp;
+            output_gbp = output_btc*btcgbp;
 
 
 
@@ -99,50 +99,50 @@ $( document ).ready(function() {
                 output_sat = output_btc*100000000;
                 output_usd = output_btc*btcusd;
                 output_eur = output_btc*btceur;
-                output_gdp = output_btc*btcgbp;
+                output_gbp = output_btc*btcgbp;
             } else if (source == 'btc'){
                 console.log('btc');
                 output_btc = input_btc;
                 output_sat = output_btc*100000000;
                 output_usd = output_btc*btcusd;
                 output_eur = output_btc*btceur;
-                output_gdp = output_btc*btcgbp;
+                output_gbp = output_btc*btcgbp;
             } else if (source == 'usd'){
                 console.log('usd');
                 output_btc = input_usd/btcusd;
                 output_sat = output_btc*100000000;
                 output_usd = output_btc*btcusd;
                 output_eur = output_btc*btceur;
-                output_gdp = output_btc*btcgbp;
+                output_gbp = output_btc*btcgbp;
             } else if (source == 'eur'){
                 console.log('eur');
                 output_btc = input_eur/btceur;
                 output_sat = output_btc*100000000;
                 output_usd = output_btc*btcusd;
                 output_eur = output_btc*btceur;
-                output_gdp = output_btc*btcgbp;
-            } else if (source == 'gdp'){
-                console.log('gdp');
+                output_gbp = output_btc*btcgbp;
+            } else if (source == 'gbp'){
+                console.log('gbp');
                 output_btc = input_gbp/btcusd;
                 output_sat = output_btc*100000000;
                 output_usd = output_btc*btcusd;
                 output_eur = output_btc*btceur;
-                output_gdp = output_btc*btcgbp;
+                output_gbp = output_btc*btcgbp;
             }
           }
 
-        output_btc = output_btc;
+          output_btc = output_btc;
           output_sat = output_sat.toFixed(0);
           output_usd = output_usd.toFixed(2);
           output_eur = output_eur.toFixed(2);
-          output_gdp = output_gdp.toFixed(2);
+          output_gbp = output_gbp.toFixed(2);
 
 
           $("#input_sat").val(addCommas(output_sat)).text(addCommas(output_sat));
           $("#input_btc").val(addCommas(output_btc)).text(addCommas(output_btc));
           $("#input_usd").val(addCommas(output_usd)).text(addCommas(output_usd));
           $("#input_eur").val(addCommas(output_eur)).text(addCommas(output_eur));
-          $("#input_gbp").val(addCommas(output_gdp)).text(addCommas(output_gdp));
+          $("#input_gbp").val(addCommas(output_gbp)).text(addCommas(output_gbp));
 
 
         }
