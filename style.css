@@ -55,7 +55,6 @@ body{
   font-size: 550%;
   margin-top: 1rem;
   padding-top: 2rem;
-  font-weight: 200;
 }
 
 .value-input:focus .value-label {
