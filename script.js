@@ -131,7 +131,7 @@ $( document ).ready(function() {
             }
           }
 
-          output_btc = output_btc.toFixed(8);
+        output_btc = output_btc;
           output_sat = output_sat.toFixed(0);
           output_usd = output_usd.toFixed(2);
           output_eur = output_eur.toFixed(2);
@@ -167,6 +167,13 @@ $( document ).ready(function() {
             return parseFloat(x);
           }
         }
+
+        var countDecimals = function(value) {
+            if (Math.floor(value) !== value)
+                return value.toString().split(".")[1].length || 0;
+            return 0;
+        }
+
 
   });
 
