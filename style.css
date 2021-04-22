@@ -69,10 +69,29 @@ a:link, a:visited, a:hover, a:active {
 
 
 
-.satsusd-label {
+
+
+
+
+
+
+.footer {
+  margin-top: 1rem;
+  padding: 0.5rem 0 0 0;
+  padding-top: 1em;
+  background: #000;
+  border: none;
+  border-top: #111 1px solid;
+  line-height: 1.2rem;
   color: #555;
   font-size: 10px;
   padding-bottom: 3rem;
+}
+
+#satsusd {
+  color: #7d7d7d;
+  font-size: 130%;
+  font-weight: 200;
 }
 
 

@@ -1,6 +1,10 @@
 $( document ).ready(function() {
 
 
+  $("#input_btc").attr({
+       "max" : 21000000,        // substitute your own
+       "min" : 0          // values (or variables) here
+  });
 
   var btcusd = 0;
   var btceur = 0;
