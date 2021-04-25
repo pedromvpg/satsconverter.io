@@ -26,10 +26,10 @@
     <meta property="og:site_name" content="Sat Converter" />
 
     <link rel="icon" type="image/png" href="https://satsconverter.io/fav.png">
-
-    <link rel="stylesheet" href="style.css">
-    <script src="jquery-3.5.1.min.js"></script>
-    <script src="script.js"></script>
+    <link rel="stylesheet" href="css/politespace.css">
+    <link rel="stylesheet" href="css/style.css">
+    
+   
 
 
     <link rel="apple-touch-icon" sizes="57x57" href="satsconverter.ico/apple-icon-57x57.png">
@@ -58,44 +58,33 @@
 
     <div id="container">
       <img src="satsconverter-logo.svg" id="logo" alt="Sats Converter" />
+ 
+      <input class="value-input" id="input_sat" data-currency="sat"  data-inputmask="'alias': 'numeric', 'groupSeparator': ',', 'digits': 0, 'digitsOptional': false"  inputmode="decimal">
+      <label for="input_sat" class="value-label">Sats</label>
 
+      <input class="value-input bitcoin" id="input_btc" data-currency="btc"  data-inputmask="'alias': 'numeric', 'groupSeparator': ',', 'digits': 8, 'digitsOptional': true" value="1" inputmode="decimal">
+      <label for="input_btc" class="value-label">Bitcoin</label>
 
-      <input inputmode="numeric" class="value-input" id="input_sat" pattern="[0-9]*" value="100000000"/>
-        <div class="value-label">Sats</div>
-      </input>
+      <input class="value-input" id="input_usd" data-currency="usd" data-inputmask="'alias': 'numeric', 'groupSeparator': ',', 'digits': 4, 'digitsOptional': false" inputmode="decimal">
+      <label for="input_btc" class="value-label">US Dollar</label>
+      
+      <input class="value-input" id="input_eur" data-currency="eur" data-inputmask="'alias': 'numeric', 'groupSeparator': ',', 'digits': 4, 'digitsOptional': false" inputmode="decimal">
+      <label for="input_btc" class="value-label">Euro</label>
 
-
-      <input inputmode="numeric" class="value-input" id="input_btc" pattern="[0-9]*" oninput="validate(this)" value=""/>
-        <div class="value-label">Bitcoin</div>
-      </input>
-
-
-      <input inputmode="numeric" class="value-input" id="input_usd" pattern="[0-9]*" value=""/>
-        <div class="value-label">US Dollar</div>
-      </input>
-
-
-      <input inputmode="numeric" class="value-input" id="input_eur" pattern="[0-9]*" value=""/>
-        <div class="value-label">Euro</div>
-      </input>
-
-
-      <input inputmode="numeric" class="value-input" id="input_gbp" pattern="[0-9]*" value=""/>
-        <div class="value-label">GB Pound</div>
-      </input>
-
-
-
-
+      <input class="value-input" id="input_bgp" data-currency="gbp" data-inputmask="'alias': 'numeric', 'groupSeparator': ',', 'digits': 4, 'digitsOptional': false" inputmode="decimal">
+      <label for="input_btc" class="value-label">GB Pound</label>
 
       <div class="footer">
-          <span id="satsusd"></span> Sats per US Dollar
+          <span id="satsusd"></span> Sats per US Dollar 
           <br>
           BETA ⚠️ Fork on <a href="https://github.com/pedromvpg/sat-converter" target="_blank">Github</a> | Price source <a href="https://api.coindesk.com/v1/bpi/currentprice.json" target="_blank">api.coindesk.com/v1/</a>
           <br>
           Developed by <a href="https://piratehash.com" target="_blank">PirateHash</a>
       </div>
 
+      <script src="js/jquery-3.5.1.min.js"></script>
+      <script src="js/inputmask.min.js"></script>
+      <script src="js/script.js"></script>
 
     </div>
 
