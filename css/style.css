@@ -92,8 +92,8 @@ input[type=number] {
 
 .footer {
   margin-top: 1rem;
-  padding: 0.5rem 0 0 0;
-  padding-top: 1em;
+  padding: 37.5rem 0 0 0;
+  padding-top: 5em;
   background: #000;
   border: none;
   border-top: #111 1px solid;
@@ -101,9 +101,14 @@ input[type=number] {
   color: #555;
   font-size: 10px;
   padding-bottom: 3rem;
+  width: 100%;
 }
 
-#satsusd {
+#satsfiats{
+  padding: 1rem;
+}
+
+.satsfiat {
   color: #7d7d7d;
   font-size: 130%;
   font-weight: 200;
