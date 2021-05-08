@@ -67,6 +67,8 @@ $( document ).ready(function() {
 			$(".value-input:not('.active, .bitcoin')").each(function(){
 				currency = $(this).data("currency");
 				$(this).val( RateToBTC[currency] * btc_input_value );
+
+				(( RateToBTC['sat'] * btc_input_value ) == 1) ? $("#sats-label").text('sat') : $("#sats-label").text('sats');
 			})
 
 		};
