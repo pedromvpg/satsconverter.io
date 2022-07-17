@@ -57,7 +57,7 @@ $( document ).ready(function() {
 			}
 			else if(source_currency == "usd" || source_currency == "eur" || source_currency == "gbp"){
 				console.log(RateToBTC[source_currency])
-				$btc_input.val(  parseFloat(source_val) / parseFloat(RateToBTC[source_currency]) );
+				$btc_input.val( parseFloat( parseFloat(source_val) / parseFloat(RateToBTC[source_currency]) ).toFixed(8) );
 			}
 
 			// Updates BTC value
