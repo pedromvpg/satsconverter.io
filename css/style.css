@@ -117,8 +117,12 @@ input[type=number] {
 
 .submit {
   cursor: pointer;
+  min-width:209px;
+  min-height:65px;
+  border-radius:4px;
+  border-style:none;
+  background-color:#2f2f2f;
 }
-
 .submit:hover{
   background: #313131;
 }
