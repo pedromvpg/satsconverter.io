@@ -115,16 +115,18 @@ input[type=number] {
 }
 
 
-.submit {
+.submit.donation {
   cursor: pointer;
   min-width:209px;
   min-height:65px;
   border-radius:4px;
   border-style:none;
   background-color:#2f2f2f;
+  color:#fff;
 }
-.submit:hover{
-  background: #313131;
+.submit.donation:hover {
+  background: #565656;
+  cursor: pointer;
 }
 
 
