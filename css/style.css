@@ -115,6 +115,15 @@ input[type=number] {
 }
 
 
+.submit {
+  cursor: pointer;
+}
+
+.submit:hover{
+  background: #313131;
+}
+
+
 
 
 .value-input::-moz-selection { color: #fff}
