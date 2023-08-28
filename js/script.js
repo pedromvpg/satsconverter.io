@@ -69,7 +69,7 @@ $( document ).ready(function() {
 		$("#satsrub").text( satPerRUB.toFixed(0) );
 
 		var satPerCHF= 1/(RateToBTC["chf"]/1)*100000000;
-		$("#satschf").text( satPerRUB.toFixed(0) );
+		$("#satschf").text( satPerCHF.toFixed(0) );
 
 
 
