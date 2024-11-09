@@ -66,6 +66,14 @@ input[type=number] {
   padding: 0.1rem;
   color: #555;
   margin-bottom: 0.5rem;
+  font-size: 14px;
+}
+
+
+.countries {
+    display: none;
+    font-size: 10px;
+    letter-spacing: 2px;
 }
 
 

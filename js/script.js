@@ -12,7 +12,7 @@ $( document ).ready(function() {
 
 
 	var apiURLcoindesk = "https://api.coindesk.com/v1/bpi/currentprice.json";
-	var apiURLcoingecko = "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd%2Ceur%2Cgbp%2Ccny%2Cjpy%2Ccad%2Cchf%2Crub%2Ctry";
+	var apiURLcoingecko = "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd%2Ceur%2Cgbp%2Ccny%2Cjpy%2Ccad%2Cchf%2Crub%2Cbrl%2Ctry";
 
 	$.getJSON( apiURLcoingecko, function( data ) {
 
@@ -41,6 +41,7 @@ $( document ).ready(function() {
 			cad: data.bitcoin.cad,
 			rub: data.bitcoin.rub,
 			chf: data.bitcoin.chf,
+			brl: data.bitcoin.brl,
 			try: data.bitcoin.try
 		};
 
@@ -71,6 +72,9 @@ $( document ).ready(function() {
 		var satPerCHF= 1/(RateToBTC["chf"]/1)*100000000;
 		$("#satschf").text( satPerCHF.toFixed(0) );
 
+		var satPerBRL= 1/(RateToBTC["brl"]/1)*100000000;
+		$("#satsbrl").text( satPerBRL.toFixed(0) );
+
 
 
 
@@ -97,7 +101,7 @@ $( document ).ready(function() {
 			else if(source_currency == "btc"){
 				btc_input_value = btc_input_value;
 			}
-			else if(source_currency == "usd" || source_currency == "eur" || source_currency == "gbp" || source_currency == "cny" || source_currency == "jpy" || source_currency == "cad" || source_currency == "rub" || source_currency == "chf" ){
+			else if(source_currency == "usd" || source_currency == "eur" || source_currency == "gbp" || source_currency == "cny" || source_currency == "jpy" || source_currency == "cad" || source_currency == "rub" || source_currency == "chf" || source_currency == "brl" ){
 				console.log(RateToBTC[source_currency])
 				$btc_input.val( parseFloat( parseFloat(source_val) / parseFloat(RateToBTC[source_currency]) ).toFixed(8) );
 			}
