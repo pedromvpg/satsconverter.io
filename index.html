@@ -59,86 +59,110 @@
     <div id="container">
       <img src="satsconverter-logo.svg" id="logo" alt="Sats Converter" />
 
-      <input class="value-input" id="input_sat" data-currency="sat"  data-inputmask="'alias': 'numeric', 'groupSeparator': ',', 'digits': 0, 'digitsOptional': false"  inputmode="decimal">
-      <label for="input_sat" class="value-label" id="sats-label">⚪️ sat</label>
+      <div class="field sticky">
+        <input class="value-input" id="input_sat" data-currency="sat"  data-inputmask="'alias': 'numeric', 'groupSeparator': ',', 'digits': 0, 'digitsOptional': false"  inputmode="decimal">
+        <label for="input_sat" class="value-label" id="sats-label">⚪️ sat</label>
+      </div>
 
-      <input class="value-input bitcoin" id="input_btc" data-currency="btc"  data-inputmask="'alias': 'numeric', 'groupSeparator': ',', 'digits': 8, 'digitsOptional': true" value="0.00000001" inputmode="decimal">
-      <label for="input_btc" class="value-label">🌎 Bitcoin</label>
+      <div class="field">
+        <input class="value-input bitcoin" id="input_btc" data-currency="btc"  data-inputmask="'alias': 'numeric', 'groupSeparator': ',', 'digits': 8, 'digitsOptional': true" value="0.00000001" inputmode="decimal">
+        <label for="input_btc" class="value-label">🌎 Bitcoin</label>
+      </div>
 
-      <input class="value-input" id="input_usd" data-currency="usd" data-inputmask="'alias': 'currency', 'groupSeparator': ',', 'digits': 2, 'digitsOptional': false" inputmode="decimal">
-      <label for="input_btc" class="value-label">
-        🇺🇸 US Dollar
-        <span class="countries">
-          🇵🇷🇬🇺🇦🇸🇲🇵🇻🇮🇹🇨🇻🇬🇪🇨🇸🇻🇹🇱🇫🇲🇵🇼🇲🇭🇧🇶
-        </span>
-      </label>
+      <div class="field">
+        <input class="value-input" id="input_usd" data-currency="usd" data-inputmask="'alias': 'currency', 'groupSeparator': ',', 'digits': 2, 'digitsOptional': false" inputmode="decimal">
+        <label for="input_btc" class="value-label">
+          🇺🇸 US Dollar
+          <span class="countries">
+            🇵🇷🇬🇺🇦🇸🇲🇵🇻🇮🇹🇨🇻🇬🇪🇨🇸🇻🇹🇱🇫🇲🇵🇼🇲🇭🇧🇶
+          </span>
+        </label>
+      </div>
 
-      <input class="value-input" id="input_eur" data-currency="eur" data-inputmask="'alias': 'currency', 'groupSeparator': ',', 'digits': 2, 'digitsOptional': false" inputmode="decimal">
-      <label for="input_btc" class="value-label">
-        🇪🇺 Euro
-        <span class="countries">
-          🇩🇪🇫🇷🇳🇱🇮🇹🇦🇹🇮🇪🇱🇺🇪🇸🇵🇹🇫🇮🇬🇷🇸🇮🇨🇾🇲🇹🇸🇰🇪🇪🇱🇻🇱🇹🇭🇷
-        </span>
-      </label>
+      <div class="field">
+        <input class="value-input" id="input_eur" data-currency="eur" data-inputmask="'alias': 'currency', 'groupSeparator': ',', 'digits': 2, 'digitsOptional': false" inputmode="decimal">
+        <label for="input_btc" class="value-label">
+          🇪🇺 Euro
+          <span class="countries">
+            🇩🇪🇫🇷🇳🇱🇮🇹🇦🇹🇮🇪🇱🇺🇪🇸🇵🇹🇫🇮🇬🇷🇸🇮🇨🇾🇲🇹🇸🇰🇪🇪🇱🇻🇱🇹🇭🇷
+          </span>
+        </label>
+      </div>
 
-      <input class="value-input" id="input_gbp" data-currency="gbp" data-inputmask="'alias': 'currency', 'groupSeparator': ',', 'digits': 2, 'digitsOptional': false" inputmode="decimal">
-      <label for="input_btc" class="value-label">
-        🇬🇧 GB&nbsp;Pound
-        <span class="countries">
-          🇩🇪🇫🇷🇳🇱🇮🇹🇦🇹🇮🇪🇱🇺🇪🇸🇵🇹🇫🇮🇬🇷🇸🇮🇨🇾🇲🇹🇸🇰🇪🇪🇱🇻🇱🇹🇭🇷
-        </span>
-      </label>
+      <div class="field">
+        <input class="value-input" id="input_gbp" data-currency="gbp" data-inputmask="'alias': 'currency', 'groupSeparator': ',', 'digits': 2, 'digitsOptional': false" inputmode="decimal">
+        <label for="input_btc" class="value-label">
+          🇬🇧 GB&nbsp;Pound
+          <span class="countries">
+            🇩🇪🇫🇷🇳🇱🇮🇹🇦🇹🇮🇪🇱🇺🇪🇸🇵🇹🇫🇮🇬🇷🇸🇮🇨🇾🇲🇹🇸🇰🇪🇪🇱🇻🇱🇹🇭🇷
+          </span>
+        </label>
+      </div>
 
-      <input class="value-input" id="input_cny" data-currency="cny" data-inputmask="'alias': 'currency', 'groupSeparator': ',', 'digits': 2, 'digitsOptional': false" inputmode="decimal">
-      <label for="input_btc" class="value-label">
-        🇨🇳 Chinese&nbsp;Yuan
-        <span class="countries">
+      <div class="field">
+        <input class="value-input" id="input_cny" data-currency="cny" data-inputmask="'alias': 'currency', 'groupSeparator': ',', 'digits': 2, 'digitsOptional': false" inputmode="decimal">
+        <label for="input_btc" class="value-label">
+          🇨🇳 Chinese&nbsp;Yuan
+          <span class="countries">
 
-        </span>
-      </label>
+          </span>
+        </label>
+      </div>
 
-      <input class="value-input" id="input_jpy" data-currency="jpy" data-inputmask="'alias': 'currency', 'groupSeparator': ',', 'digits': 2, 'digitsOptional': false" inputmode="decimal">
-      <label for="input_btc" class="value-label">
-        🇯🇵 Japanese&nbsp;Yen
-        <span class="countries">
-        </span>
-      </label>
+      <div class="field">
+        <input class="value-input" id="input_jpy" data-currency="jpy" data-inputmask="'alias': 'currency', 'groupSeparator': ',', 'digits': 2, 'digitsOptional': false" inputmode="decimal">
+        <label for="input_btc" class="value-label">
+          🇯🇵 Japanese&nbsp;Yen
+          <span class="countries">
+          </span>
+        </label>
+      </div>
 
-      <input class="value-input" id="input_cad" data-currency="cad" data-inputmask="'alias': 'currency', 'groupSeparator': ',', 'digits': 2, 'digitsOptional': false" inputmode="decimal">
-      <label for="input_btc" class="value-label">
-        🇨🇦 Canadian&nbsp;Dollar
-        <span class="countries">
-        </span>
-      </label>
+      <div class="field">
+        <input class="value-input" id="input_cad" data-currency="cad" data-inputmask="'alias': 'currency', 'groupSeparator': ',', 'digits': 2, 'digitsOptional': false" inputmode="decimal">
+        <label for="input_btc" class="value-label">
+          🇨🇦 Canadian&nbsp;Dollar
+          <span class="countries">
+          </span>
+        </label>
+      </div>
 
-      <input class="value-input" id="input_rub" data-currency="rub" data-inputmask="'alias': 'currency', 'groupSeparator': ',', 'digits': 2, 'digitsOptional': false" inputmode="decimal">
-      <label for="input_btc" class="value-label">
-        🇷🇺 Russian&nbsp;Rubble
-        <span class="countries">
-        </span>
-      </label>
+      <div class="field">
+        <input class="value-input" id="input_rub" data-currency="rub" data-inputmask="'alias': 'currency', 'groupSeparator': ',', 'digits': 2, 'digitsOptional': false" inputmode="decimal">
+        <label for="input_btc" class="value-label">
+          🇷🇺 Russian&nbsp;Rubble
+          <span class="countries">
+          </span>
+        </label>
+      </div>
 
-      <input class="value-input" id="input_chf" data-currency="chf" data-inputmask="'alias': 'currency', 'groupSeparator': ',', 'digits': 2, 'digitsOptional': false" inputmode="decimal">
-      <label for="input_btc" class="value-label">
-        🇨🇭 Swiss&nbsp;Franc
-        <span class="countries">
-        </span>
-      </label>
+      <div class="field">
+        <input class="value-input" id="input_chf" data-currency="chf" data-inputmask="'alias': 'currency', 'groupSeparator': ',', 'digits': 2, 'digitsOptional': false" inputmode="decimal">
+        <label for="input_btc" class="value-label">
+          🇨🇭 Swiss&nbsp;Franc
+          <span class="countries">
+          </span>
+        </label>
+      </div>
 
-      <input class="value-input" id="input_brl" data-currency="brl" data-inputmask="'alias': 'currency', 'groupSeparator': ',', 'digits': 2, 'digitsOptional': false" inputmode="decimal">
-      <label for="input_brl" class="value-label">
-        🇧🇷 Brazilian&nbsp;Real
-        <span class="countries">
-        </span>
-      </label>
+      <div class="field">
+        <input class="value-input" id="input_brl" data-currency="brl" data-inputmask="'alias': 'currency', 'groupSeparator': ',', 'digits': 2, 'digitsOptional': false" inputmode="decimal">
+        <label for="input_brl" class="value-label">
+          🇧🇷 Brazilian&nbsp;Real
+          <span class="countries">
+          </span>
+        </label>
+      </div>
 
-      <input class="value-input" id="input_aed" data-currency="aed" data-inputmask="'alias': 'currency', 'groupSeparator': ',', 'digits': 2, 'digitsOptional': false" inputmode="decimal">
-      <label for="input_aed" class="value-label">
-        🇦🇪 United&nbsp;Arab&nbsp;Emirates&nbsp;Dirham
+      <div class="field">
+        <input class="value-input" id="input_aed" data-currency="aed" data-inputmask="'alias': 'currency', 'groupSeparator': ',', 'digits': 2, 'digitsOptional': false" inputmode="decimal">
+        <label for="input_aed" class="value-label">
+          🇦🇪 United&nbsp;Arab&nbsp;Emirates&nbsp;Dirham
 
-        <span class="countries">
-        </span>
-      </label>
+          <span class="countries">
+          </span>
+        </label>
+      </div>
 
 
 
