@@ -22,11 +22,16 @@ a:link, a:visited, a:hover, a:active {
 #container {
   width: 100%;
   display: flex;
-  flex-direction: column;
-  justify-content: center;
+  flex-direction: row;
+  justify-content: space-around;
   align-items: center;
   text-align: center;
   min-height: 100vh;
+  flex-wrap: wrap;
+  gap: 0;
+  max-width: 510px;
+  margin: auto;
+  border: #111 1px solid;
 }
 
 
@@ -154,7 +159,7 @@ input[type=number] {
     padding: 0em;
   }
   .value-input {
-    padding: 1rem 0 0 0;
+    /* padding: 1rem 0 0 0; */
   }
   .value-label {
     margin-bottom: 0.3rem;
@@ -407,10 +412,19 @@ explicitly, e.g.
   background: #000;
   border-bottom: #111 1px solid;
   padding: 1em;
+  box-sizing: border-box;
 }
 
 .sticky{
   top:0;
   position:sticky;
   border-top: #111 1px solid;
+}
+
+.fiat{
+  width: 50%;
+}
+
+.fiat .value-input {
+    font-size: 110%;
 }
