@@ -29,7 +29,7 @@ a:link, a:visited, a:hover, a:active {
   min-height: 100vh;
   flex-wrap: wrap;
   gap: 0;
-  max-width: 510px;
+  max-width: 600px;
   margin: auto;
   border: #111 1px solid;
 }
@@ -86,7 +86,7 @@ input[type=number] {
   outline: none;
   outline-style: none;
   box-shadow: none;
-  font-size: 550%;
+  font-size: 400%;
   /* margin-top: 1rem; */
   /* padding-top: 2rem; */
 }
