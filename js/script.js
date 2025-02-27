@@ -11,76 +11,57 @@ $( document ).ready(function() {
 
 
 
-	var apiURLcoindesk = "https://api.coindesk.com/v1/bpi/currentprice.json";
-	var apiURLcoingecko = "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd%2Ceur%2Cgbp%2Ccny%2Cjpy%2Ccad%2Cchf%2Crub%2Cbrl%2Caed%2Ctry";
+	var priceURL = "https://pvxg.net/bitcoin-price/";
 
-	$.getJSON( apiURLcoingecko, function( data ) {
+	$.getJSON( priceURL, function( data ) {
 
 		console.log(data)
-		// coindesk API
-		/*
-		var RateToBTC = {
-			sat: 100000000,
-			btc: 1,
-			usd: data.bpi.USD.rate_float,
-			eur: data.bpi.EUR.rate_float,
-			gbp: data.bpi.GBP.rate_float
-		};
-		*/
 
-		// coingecko API
-		// {"bitcoin":{"usd":16828.13,"eur":15849.27,"gbp":13858.69,"cny":117156,"jpy":2208209,"cad":22929,"chf":15590.78,"rub":1189749,"try":313990}}
 		var RateToBTC = {
 			sat: 100000000,
 			btc: 1,
-			usd: data.bitcoin.usd,
-			eur: data.bitcoin.eur,
-			gbp: data.bitcoin.gbp,
-			cny: data.bitcoin.cny,
-			jpy: data.bitcoin.jpy,
-			cad: data.bitcoin.cad,
-			rub: data.bitcoin.rub,
-			chf: data.bitcoin.chf,
-			brl: data.bitcoin.brl,
-			aed: data.bitcoin.aed,
-			try: data.bitcoin.try
+			usd: data.USD, // U.S. Dollar
+			eur: data.EUR, // Euro
+			gbp: data.GBP, // Sterling
+			cny: data.CNY, // Renminbi
+			jpy: data.JPY, // Japanese yen
+			cad: data.CAD, // Canadian dol
+			chf: data.CHF, // Swiss franc
+			rub: data.RUB, // Russina rubl
+			brl: data.BRL, // Brazilian real
+			aed: data.AED, // UAE dirham
+			try: data.TRY, // Turkish lira
+			aud: data.AUD, // Australian dollar
+			nok: data.NOK, // Norwegian krone
+			mxn: data.MXN, // Mexican peso
+			thb: data.THB, // Thai baht
+			ils: data.ILS, // Israeli new shekel
+			inr: data.INR, // Indian rupee
+			zar: data.ZAR, // South Africa rand
+			dkk: data.DKK, // Danish krone
+			pln: data.PLN, // Polish złoty
+			sek: data.SEK  // Swedish krona
 		};
 
 		calcConversion();
 
 
-		var satPerUSD = 1/(RateToBTC["usd"]/1)*100000000;
-		$("#satsusd").text( satPerUSD.toFixed(0) );
+		var currencyCodes = [
+        "usd", "eur", "gbp", "cny", "jpy", "cad",
+        "rub", "chf", "brl", "aed", "try", "aud",
+        "mxn", "ils", "zar", "thb", 'inr', 'sek'
+    ];
 
-		var satPerEUR = 1/(RateToBTC["eur"]/1)*100000000;
-		$("#satseur").text( satPerEUR.toFixed(0) );
-
-		var satPerGBP = 1/(RateToBTC["gbp"]/1)*100000000;
-		$("#satsgbp").text( satPerGBP.toFixed(0) );
-
-		var satPerCNY = 1/(RateToBTC["cny"]/1)*100000000;
-		$("#satscny").text( satPerCNY.toFixed(0) );
-
-		var satPerJPY = 1/(RateToBTC["jpy"]/1)*100000000;
-		$("#satsjpy").text( satPerJPY.toFixed(0) );
-
-		var satPerCAD = 1/(RateToBTC["cad"]/1)*100000000;
-		$("#satscad").text( satPerCAD.toFixed(0) );
-
-		var satPerRUB = 1/(RateToBTC["rub"]/1)*100000000;
-		$("#satsrub").text( satPerRUB.toFixed(0) );
-
-		var satPerCHF= 1/(RateToBTC["chf"]/1)*100000000;
-		$("#satschf").text( satPerCHF.toFixed(0) );
-
-		var satPerBRL= 1/(RateToBTC["brl"]/1)*100000000;
-		$("#satsbrl").text( satPerBRL.toFixed(0) );
-
-		var satPerAED= 1/(RateToBTC["aed"]/1)*100000000;
-		$("#satsaed").text( satPerAED.toFixed(0) );
-
-
-
+    currencyCodes.forEach(function(code) {
+        var satPerCurrency = 1 / (RateToBTC[code] / 1) * 100000000;
+        $("#sats" + code).text(satPerCurrency.toFixed(0));
+		    var spanElement = $('<div>', {
+		        id: "sats" + code,
+		        class: "satsfiat",
+		        text: satPerCurrency.toFixed(0) + " sats per 1 " + code.toUpperCase()
+		    });
+		    $("#satsfiats").append(spanElement);
+		});
 
 
 

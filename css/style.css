@@ -425,6 +425,10 @@ explicitly, e.g.
   width: 50%;
 }
 
+.fiat:nth-child(odd){
+  border-left: #111 1px solid
+}
+
 .fiat .value-input {
     font-size: 110%;
 }
