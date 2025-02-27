@@ -104,9 +104,9 @@ input[type=number] {
 
 
 .footer {
-  margin-top: 1rem;
-  padding: 37.5rem 0 0 0;
-  padding-top: 5em;
+  /* margin-top: 1rem; */
+  /* padding: 174.5rem 0 0 0; */
+  padding-top: 1em;
   background: #000;
   border: none;
   /* border-top: #111 1px solid; */
@@ -118,7 +118,10 @@ input[type=number] {
 }
 
 #satsfiats{
-  padding: 1rem;
+  padding: 2rem;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
 }
 
 .satsfiat {
@@ -127,6 +130,20 @@ input[type=number] {
   font-weight: 200;
 }
 
+
+div#satsfiats div {
+    width: 15%;
+    padding: 0.2rem;
+    line-height: 1rem;
+    margin-bottom: 0.5rem;
+}
+
+
+
+div#satsfiats span {
+   display:block;
+   color:#fff;
+}
 
 .submit.donation {
   cursor: pointer;
