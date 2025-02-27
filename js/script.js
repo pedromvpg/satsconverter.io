@@ -54,13 +54,10 @@ $( document ).ready(function() {
 
     currencyCodes.forEach(function(code) {
         var satPerCurrency = 1 / (RateToBTC[code] / 1) * 100000000;
-        $("#sats" + code).text(satPerCurrency.toFixed(0));
-		    var spanElement = $('<div>', {
-		        id: "sats" + code,
-		        class: "satsfiat",
-		        text: satPerCurrency.toFixed(0) + " sats per 1 " + code.toUpperCase()
+				var satsPerElement = $('<div>', {
+		        html: "<span class='satsfiat'>"+satPerCurrency.toFixed(0)+"</span> sats per 1 " + code.toUpperCase()
 		    });
-		    $("#satsfiats").append(spanElement);
+		    $("#satsfiats").append(satsPerElement);
 		});
 
 
