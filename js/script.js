@@ -11,7 +11,7 @@ $( document ).ready(function() {
 
 
 
-	var priceURL = "https://pvxg.net/bitcoin-price/";
+	var priceURL = "https://pvxg.net/bitcoin-price/index.php";
 
 	$.getJSON( priceURL, function( data ) {
 
