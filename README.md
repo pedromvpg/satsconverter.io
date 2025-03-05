@@ -2,7 +2,7 @@
 
 Web currency converter with Sats as the standard: https://satsconverter.io/.
 
-<img alt="SATSCONVERTER Desktop" src="https://github.com/user-attachments/assets/107b697a-dfe2-48a3-ab3e-8b3981523975" />
+<img alt="image" src="https://github.com/user-attachments/assets/2119613c-595d-4b04-b14a-5b82e6d94197" />
 
 ## License [MIT](https://github.com/pedromvpg/satsconverter.io/blob/main/LICENSE)
 
