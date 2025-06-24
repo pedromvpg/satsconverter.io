@@ -531,13 +531,13 @@ explicitly, e.g.
   right: 0;
   height: 21px;
   width: 21px;
-  background-color: #141414;
+  background-color: #232323;
   border-radius: 21px;
 }
 
 /* On mouse-over, add a grey background color */
 #options :hover input ~ .checkmark {
-  background-color: #121212;
+  background-color: #1e1e1e;
 }
 
 /* When the checkbox is checked, add a blue background */
