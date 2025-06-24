@@ -59,6 +59,40 @@ function formatLargeNumber(num, isEuropean = false) {
 
 $( document ).ready(function() {
 
+	// Math Expression Parser
+	function parseMathExpression(input) {
+		// Remove commas and extra spaces
+		input = input.replace(/[, ]/g, '');
+		
+		// Check if input contains math operators
+		if (/[\+\-\*\/]/.test(input)) {
+			try {
+				// Validate the expression - only allow numbers and basic operators
+				if (/^[\d\+\-\*\/\.\(\)]+$/.test(input)) {
+					// Check for division by zero
+					if (input.includes('/0') && !input.includes('/0.')) {
+						return null; // Division by zero
+					}
+					
+					// Evaluate the expression
+					var result = eval(input);
+					
+					// Check if result is valid number
+					if (isFinite(result) && !isNaN(result)) {
+						return result;
+					}
+				}
+			} catch (e) {
+				// Invalid expression, return null
+				return null;
+			}
+		}
+		
+		// No math expression or invalid, return original input
+		var parsed = parseFloat(input.replace(/[, ]/g, ''));
+		return isNaN(parsed) ? 0 : parsed;
+	}
+
 	// Drag and Drop Currency Reordering
 	function initializeDragAndDrop() {
 		// Get saved order from URL params first, then localStorage, then default
@@ -198,10 +232,208 @@ $( document ).ready(function() {
 
 
 
-	Inputmask({}).mask(document.querySelectorAll("input"));
+	// Custom formatting system to replace Inputmask
+	var isProgrammaticUpdate = false; // Flag to prevent input handler interference
+	
+	function formatNumber(value, currency) {
+		if (currency === "sat") {
+			// Satoshis: whole numbers with commas
+			return Math.round(parseFloat(value) || 0).toLocaleString();
+		} else if (currency === "btc") {
+			// Bitcoin: 8 decimal places
+			return (parseFloat(value) || 0).toFixed(8);
+		} else {
+			// Fiat: 2 decimal places with commas
+			return (parseFloat(value) || 0).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+		}
+	}
 
+	function unformatNumber(value) {
+		// Remove commas and convert to number
+		return parseFloat(value.replace(/,/g, '')) || 0;
+	}
 
+	// Apply initial formatting to all inputs
+	$(".value-input").each(function() {
+		var $input = $(this);
+		var currency = $input.data("currency");
+		var currentValue = $input.val();
+		
+		if (currentValue && currentValue !== '0.00000001') {
+			isProgrammaticUpdate = true;
+			$input.val(formatNumber(currentValue, currency));
+			isProgrammaticUpdate = false;
+		}
+	});
 
+	// Handle input without real-time formatting
+	$(".value-input").on('input', function(e) {
+		if (isProgrammaticUpdate) return; // Skip if this is a programmatic update
+		
+		var $input = $(this);
+		var value = $input.val();
+		var currency = $input.data("currency");
+		
+		// Check if this is a math expression
+		if (/[\+\-\*\/\(\)]/.test(value)) {
+			// Math mode - don't format, just add visual feedback
+			$input.addClass('math-mode');
+			$input.removeClass('math-calculating');
+		} else {
+			// Normal mode - remove math mode but don't format yet
+			$input.removeClass('math-mode');
+			
+			// Validate input - only allow numbers, decimals, and commas
+			var cleanValue = value.replace(/[^\d.,]/g, '');
+			
+			// Handle multiple decimal points - keep only the first one
+			var parts = cleanValue.split('.');
+			if (parts.length > 2) {
+				cleanValue = parts[0] + '.' + parts.slice(1).join('');
+			}
+			
+			// Handle multiple commas - remove all but keep structure
+			cleanValue = cleanValue.replace(/,/g, '');
+			
+			// Update value if it changed
+			if (cleanValue !== value) {
+				var cursorPos = $input[0].selectionStart;
+				var valueBeforeCursor = value.substring(0, cursorPos);
+				var commasBeforeCursor = (valueBeforeCursor.match(/,/g) || []).length;
+				var cleanValueBeforeCursor = cleanValue.substring(0, cursorPos - commasBeforeCursor);
+				
+				$input.val(cleanValue);
+				
+				// Restore cursor position
+				setTimeout(function() {
+					var newCursorPos = Math.min(cleanValueBeforeCursor.length, cleanValue.length);
+					$input[0].setSelectionRange(newCursorPos, newCursorPos);
+				}, 0);
+			}
+		}
+		
+		// Check if user is trying to type math operators as text
+		if (value.includes('plus') || value.includes('minus') || value.includes('times') || value.includes('divide')) {
+			var newValue = value
+				.replace(/plus/g, '+')
+				.replace(/minus/g, '-')
+				.replace(/times/g, '*')
+				.replace(/divide/g, '/');
+			
+			if (newValue !== value) {
+				$input.val(newValue);
+				$input.addClass('math-mode');
+			}
+		}
+	});
+
+	// Handle paste events for math operators
+	$(".value-input").on('paste', function(e) {
+		var $input = $(this);
+		var pastedText = (e.originalEvent || e).clipboardData.getData('text/plain');
+		
+		if (/[\+\-\*\/\(\)]/.test(pastedText)) {
+			e.preventDefault();
+			var currentValue = $input.val();
+			var cursorPos = $input[0].selectionStart;
+			
+			// Add the pasted text at cursor position
+			var newValue = currentValue.slice(0, cursorPos) + pastedText + currentValue.slice(cursorPos);
+			$input.val(newValue);
+			$input.addClass('math-mode');
+			
+			// Set cursor position after the pasted text
+			setTimeout(function() {
+				$input[0].setSelectionRange(cursorPos + pastedText.length, cursorPos + pastedText.length);
+				$input.focus();
+			}, 0);
+		}
+	});
+
+	// Handle Enter key to compute and blur
+	$(".value-input").on('keydown', function(e) {
+		if (e.keyCode === 13) { // Enter key
+			e.preventDefault();
+			var $input = $(this);
+			var value = $input.val();
+			var currency = $input.data("currency");
+			
+			console.log('ENTER KEY - Original value:', value, 'Currency:', currency);
+			
+			// Check if this is a math expression
+			if (/[\+\-\*\/\(\)]/.test(value)) {
+				var calculatedValue = parseMathExpression(value);
+				console.log('ENTER KEY - Math expression detected, calculated value:', calculatedValue);
+				
+				if (calculatedValue !== null) {
+					// Format the calculated result
+					isProgrammaticUpdate = true;
+					var formattedResult = formatNumber(calculatedValue, currency);
+					console.log('ENTER KEY - Setting formatted result:', formattedResult);
+					$input.val(formattedResult);
+					$input.removeClass('math-mode');
+					console.log('ENTER KEY - Value after setting:', $input.val());
+				}
+			} else {
+				// Format the number
+				isProgrammaticUpdate = true;
+				var formattedResult = formatNumber(value, currency);
+				console.log('ENTER KEY - Setting formatted result (non-math):', formattedResult);
+				$input.val(formattedResult);
+				console.log('ENTER KEY - Value after setting (non-math):', $input.val());
+			}
+			
+			// Blur the field
+			console.log('ENTER KEY - About to blur, current value:', $input.val());
+			$input.blur();
+			
+			// Reset the flag after a short delay to allow blur event to complete
+			setTimeout(function() {
+				isProgrammaticUpdate = false;
+				console.log('ENTER KEY - Reset isProgrammaticUpdate to false');
+			}, 10);
+		}
+	});
+
+	// Handle blur event to format numbers
+	$(".value-input").on('blur', function(e) {
+		console.log('BLUR - isProgrammaticUpdate:', isProgrammaticUpdate);
+		if (isProgrammaticUpdate) {
+			console.log('BLUR - Skipping due to programmatic update');
+			return; // Skip if this is a programmatic update
+		}
+		
+		var $input = $(this);
+		var value = $input.val();
+		var currency = $input.data("currency");
+		
+		console.log('BLUR - Processing value:', value, 'Currency:', currency);
+		
+		// Check if this is a math expression
+		if (/[\+\-\*\/\(\)]/.test(value)) {
+			var calculatedValue = parseMathExpression(value);
+			console.log('BLUR - Math expression detected, calculated value:', calculatedValue);
+			
+			if (calculatedValue !== null) {
+				// Format the calculated result
+				isProgrammaticUpdate = true;
+				var formattedResult = formatNumber(calculatedValue, currency);
+				console.log('BLUR - Setting formatted result:', formattedResult);
+				$input.val(formattedResult);
+				$input.removeClass('math-mode');
+				isProgrammaticUpdate = false;
+				console.log('BLUR - Value after setting:', $input.val());
+			}
+		} else if (value && value.trim() !== '') {
+			// Format the number
+			isProgrammaticUpdate = true;
+			var formattedResult = formatNumber(value, currency);
+			console.log('BLUR - Setting formatted result (non-math):', formattedResult);
+			$input.val(formattedResult);
+			isProgrammaticUpdate = false;
+			console.log('BLUR - Value after setting (non-math):', $input.val());
+		}
+	});
 
 	var $currency_inputs = $(".value-input"),
 		$btc_input = $(".bitcoin"),
@@ -308,36 +540,67 @@ $( document ).ready(function() {
 
 
 		function calcConversion(source_val, source_currency, firstLoad){
-			console.log("---")
+			console.log("CALC CONVERSION - source_val:", source_val, "source_currency:", source_currency, "firstLoad:", firstLoad);
 			var	btc_input_value = parseFloat($btc_input.val().replace(/,/g, '')).toFixed(8);
+			console.log("CALC CONVERSION - btc_input_value before:", btc_input_value);
 
 			//set BTC max if user is editing BTC input
 			if( btc_input_value > btc_max_stock ){
 				btc_input_value = btc_max_stock
+				isProgrammaticUpdate = true;
 				$btc_input.val(btc_max_stock)
+				isProgrammaticUpdate = false;
 			}
 
 
 			// Get convertion to BTC from the current currency
 
 			if(source_currency == "sat"){
-				$btc_input.val( parseFloat(source_val / RateToBTC[source_currency]).toFixed(8) );
+				isProgrammaticUpdate = true;
+				var newBtcValue = parseFloat(source_val / RateToBTC[source_currency]).toFixed(8);
+				console.log("CALC CONVERSION - Setting BTC value (sat):", newBtcValue);
+				$btc_input.val(newBtcValue);
+				isProgrammaticUpdate = false;
 			}
 			else if(source_currency == "btc"){
 				btc_input_value = btc_input_value;
 			}
 			else{
 				console.log(RateToBTC[source_currency]);
-				$btc_input.val( parseFloat( parseFloat(source_val) / parseFloat(RateToBTC[source_currency]) ).toFixed(8) );
+				isProgrammaticUpdate = true;
+				var newBtcValue = parseFloat( parseFloat(source_val) / parseFloat(RateToBTC[source_currency]) ).toFixed(8);
+				console.log("CALC CONVERSION - Setting BTC value (fiat):", newBtcValue);
+				$btc_input.val(newBtcValue);
+				isProgrammaticUpdate = false;
 			}
 
 			// Updates BTC value
 			btc_input_value = parseFloat($btc_input.val().replace(/,/g, '')).toFixed(8);
+			console.log("CALC CONVERSION - btc_input_value after:", btc_input_value);
 
 			// Updates all inputs depending on its rate to BTC
 			$(".value-input:not('.active, .bitcoin')").each(function(){
 				currency = $(this).data("currency");
-				$(this).val( RateToBTC[currency] * btc_input_value );
+				var calculatedValue = RateToBTC[currency] * btc_input_value;
+				console.log("CALC CONVERSION - Calculating for", currency, ":", calculatedValue);
+				
+				isProgrammaticUpdate = true;
+				// Format the value properly based on currency type
+				if (currency === "sat") {
+					var formattedValue = Math.round(calculatedValue).toLocaleString();
+					console.log("CALC CONVERSION - Setting", currency, "to:", formattedValue);
+					$(this).val(formattedValue);
+				} else if (currency === "btc") {
+					var formattedValue = calculatedValue.toFixed(8);
+					console.log("CALC CONVERSION - Setting", currency, "to:", formattedValue);
+					$(this).val(formattedValue);
+				} else {
+					var formattedValue = calculatedValue.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+					console.log("CALC CONVERSION - Setting", currency, "to:", formattedValue);
+					$(this).val(formattedValue);
+				}
+				isProgrammaticUpdate = false;
+				
 				(( RateToBTC['sat'] * btc_input_value ) == 1) ? $("#sats-label").text('⚪️ sat') : $("#sats-label").text('⚪️ sats');
 			})
 
@@ -346,40 +609,91 @@ $( document ).ready(function() {
 
 
 		$currency_inputs.keyup(function(e) {
-
-			var source_val = parseFloat($(this).val().replace(/,/g, '')).toFixed(8),
-			source_currency = $(this).data("currency");
-
-			$(this).addClass("active");
-			calcConversion( source_val, source_currency, false );
-
-			writenNumber(european);
-
-			// Clear all existing currency parameters but preserve order
-			var currentOrder = url.searchParams.get('order');
-			url.searchParams.delete('sats');
-			var currencyCodes = [
-				"usd", "eur", "gbp", "cny", "jpy", "cad",
-				"rub", "chf", "brl", "aed", "try", "aud",
-				"mxn", "ils", "zar", "thb", 'inr', 'sek',
-				'sar', /*'vef',*/ "ars"
-			];
-			currencyCodes.forEach(function(code) {
-				url.searchParams.delete(code);
-			});
+			console.log('KEYUP - Event triggered, keyCode:', e.keyCode);
 			
-			// Restore order parameter if it existed
-			if (currentOrder) {
-				url.searchParams.set('order', currentOrder);
-			}
+			var inputValue = $(this).val();
+			var source_currency = $(this).data("currency");
+			
+			console.log('KEYUP - Input value:', inputValue, 'Currency:', source_currency);
+			
+			// Check if this is a math expression
+			if (/[\+\-\*\/\(\)]/.test(inputValue.replace(/[, ]/g, ''))) {
+				console.log('KEYUP - Math expression detected');
+				// Parse math expression
+				var calculatedValue = parseMathExpression(inputValue);
+				console.log('KEYUP - Calculated value:', calculatedValue);
+				
+				if (calculatedValue !== null) {
+					// Use calculated value for conversion
+					var source_val = parseFloat(calculatedValue).toFixed(8);
+					console.log('KEYUP - Calling calcConversion with:', source_val, source_currency);
+					
+					$(this).addClass("active");
+					calcConversion( source_val, source_currency, false );
+					writenNumber(european);
+					
+					// Update URL with calculated value
+					var currentOrder = url.searchParams.get('order');
+					url.searchParams.delete('sats');
+					var currencyCodes = [
+						"usd", "eur", "gbp", "cny", "jpy", "cad",
+						"rub", "chf", "brl", "aed", "try", "aud",
+						"mxn", "ils", "zar", "thb", 'inr', 'sek',
+						'sar', /*'vef',*/ "ars"
+					];
+					currencyCodes.forEach(function(code) {
+						url.searchParams.delete(code);
+					});
+					
+					if (currentOrder) {
+						url.searchParams.set('order', currentOrder);
+					}
 
-			// Update URL with the correct currency parameter
-			if (source_currency === 'sat') {
-				url.searchParams.set('sats', parseFloat($(this).val().toString().replace(/,/g, '')).toFixed(0));
+					if (source_currency === 'sat') {
+						url.searchParams.set('sats', parseFloat(calculatedValue).toFixed(0));
+					} else {
+						url.searchParams.set(source_currency, parseFloat(calculatedValue).toFixed(2));
+					}
+					window.history.pushState({}, '', url);
+				}
 			} else {
-				url.searchParams.set(source_currency, parseFloat($(this).val().toString().replace(/,/g, '')).toFixed(2));
+				console.log('KEYUP - Regular number input');
+				// Parse regular number input
+				var source_val = unformatNumber(inputValue);
+				source_val = parseFloat(source_val).toFixed(8);
+				console.log('KEYUP - Parsed source_val:', source_val);
+
+				$(this).addClass("active");
+				calcConversion( source_val, source_currency, false );
+
+				writenNumber(european);
+
+				// Clear all existing currency parameters but preserve order
+				var currentOrder = url.searchParams.get('order');
+				url.searchParams.delete('sats');
+				var currencyCodes = [
+					"usd", "eur", "gbp", "cny", "jpy", "cad",
+					"rub", "chf", "brl", "aed", "try", "aud",
+					"mxn", "ils", "zar", "thb", 'inr', 'sek',
+					'sar', /*'vef',*/ "ars"
+				];
+				currencyCodes.forEach(function(code) {
+					url.searchParams.delete(code);
+				});
+				
+				// Restore order parameter if it existed
+				if (currentOrder) {
+					url.searchParams.set('order', currentOrder);
+				}
+
+				// Update URL with the correct currency parameter
+				if (source_currency === 'sat') {
+					url.searchParams.set('sats', parseFloat(source_val).toFixed(0));
+				} else {
+					url.searchParams.set(source_currency, parseFloat(source_val).toFixed(2));
+				}
+				window.history.pushState({}, '', url);
 			}
-			window.history.pushState({}, '', url);
 
 		});
 
