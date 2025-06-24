@@ -1,5 +1,3 @@
-
-
 function writenNumber(european){
 	$(".writen-number").each(function() {
 			var value = $(this).parent().siblings(".value-input").val();
@@ -20,7 +18,7 @@ function formatLargeNumber(num, isEuropean = false) {
     const thresholds = isEuropean
         ? [
             { value: 1e21, word: 'trilliard' },
-						{ value: 1e18, word: 'trillion' },       // European trillion
+			{ value: 1e18, word: 'trillion' },       // European trillion
             { value: 1e15, word: 'billiard' },
             { value: 1e12, word: 'billion' },        // European billion
             { value: 1e9, word: 'milliard' },
@@ -29,7 +27,7 @@ function formatLargeNumber(num, isEuropean = false) {
         ]
         : [
             { value: 1e18, word: 'sextillion' },
-						{ value: 1e18, word: 'quintillion' },
+			{ value: 1e18, word: 'quintillion' },
             { value: 1e15, word: 'quadrillion' },
             { value: 1e12, word: 'trillion' },       // Standard trillion
             { value: 1e9, word: 'billion' },         // Standard billion
@@ -60,13 +58,7 @@ function formatLargeNumber(num, isEuropean = false) {
 
 
 $( document ).ready(function() {
-
-
-
-
-
-
-	const url = new URL(window.location.href);
+const url = new URL(window.location.href);
   if (url.searchParams.get('written') === 'true') {
       $('#written-number-check').prop('checked', true);
 			$(".writen-number").animate({opacity: 1}, 100);
@@ -168,6 +160,44 @@ $( document ).ready(function() {
 		setInterval( function() { calcConversion(0, "sat", true); }, (1000*60*5) );
 
 
+		// Handle URL parameters for initial loading
+		var urlParams = url.searchParams;
+		var loadedCurrency = null;
+		var loadedValue = null;
+		
+		// Check for sats parameter first (legacy support)
+		if (urlParams.get('sats')) {
+			loadedCurrency = 'sat';
+			loadedValue = urlParams.get('sats');
+		} else {
+			// Check for other currency parameters
+			var currencyCodes = [
+				"usd", "eur", "gbp", "cny", "jpy", "cad",
+				"rub", "chf", "brl", "aed", "try", "aud",
+				"mxn", "ils", "zar", "thb", 'inr', 'sek',
+				'sar', /*'vef',*/ "ars"
+			];
+			
+			for (var i = 0; i < currencyCodes.length; i++) {
+				var code = currencyCodes[i];
+				if (urlParams.get(code)) {
+					loadedCurrency = code;
+					loadedValue = urlParams.get(code);
+					break;
+				}
+			}
+		}
+		
+		// If we found a currency parameter, load it
+		if (loadedCurrency && loadedValue) {
+			$('#input_' + loadedCurrency).val(loadedValue);
+			calcConversion(parseFloat(loadedValue), loadedCurrency, false);
+		}
+
+
+
+
+
 		var currencyCodes = [
         "usd", "eur", "gbp", "cny", "jpy", "cad",
         "rub", "chf", "brl", "aed", "try", "aud",
@@ -201,26 +231,11 @@ $( document ).ready(function() {
 			// Get convertion to BTC from the current currency
 
 			if(source_currency == "sat"){
-
-				if(firstLoad == true){
-					var loadVal = 1;
-					if (url.searchParams.get('sats') !== false) {
-							$('#input_sat').val( url.searchParams.get('sats') );
-							loadVal = url.searchParams.get('sats');
-							$btc_input.val( parseFloat(loadVal / RateToBTC[source_currency]).toFixed(8) );
-					}else{
-						$btc_input.val( parseFloat(source_val / RateToBTC[source_currency]).toFixed(8) );
-					}
-
-				}else{
-					$btc_input.val( parseFloat(source_val / RateToBTC[source_currency]).toFixed(8) );
-				}
-
+				$btc_input.val( parseFloat(source_val / RateToBTC[source_currency]).toFixed(8) );
 			}
 			else if(source_currency == "btc"){
 				btc_input_value = btc_input_value;
 			}
-			//else if(source_currency == "usd" || source_currency == "eur" || source_currency == "gbp" || source_currency == "cny" || source_currency == "jpy" || source_currency == "cad" || source_currency == "rub" || source_currency == "chf" || source_currency == "brl" || source_currency == "aed" ){
 			else{
 				console.log(RateToBTC[source_currency]);
 				$btc_input.val( parseFloat( parseFloat(source_val) / parseFloat(RateToBTC[source_currency]) ).toFixed(8) );
@@ -250,7 +265,24 @@ $( document ).ready(function() {
 
 			writenNumber(european);
 
-			url.searchParams.set('sats', parseFloat($(this).val().toString().replace(/,/g, '')).toFixed(0));
+			// Clear all existing currency parameters
+			url.searchParams.delete('sats');
+			var currencyCodes = [
+				"usd", "eur", "gbp", "cny", "jpy", "cad",
+				"rub", "chf", "brl", "aed", "try", "aud",
+				"mxn", "ils", "zar", "thb", 'inr', 'sek',
+				'sar', /*'vef',*/ "ars"
+			];
+			currencyCodes.forEach(function(code) {
+				url.searchParams.delete(code);
+			});
+
+			// Update URL with the correct currency parameter
+			if (source_currency === 'sat') {
+				url.searchParams.set('sats', parseFloat($(this).val().toString().replace(/,/g, '')).toFixed(0));
+			} else {
+				url.searchParams.set(source_currency, parseFloat($(this).val().toString().replace(/,/g, '')).toFixed(2));
+			}
 			window.history.pushState({}, '', url);
 
 		});
