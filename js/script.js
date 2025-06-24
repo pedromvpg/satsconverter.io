@@ -583,6 +583,7 @@ $( document ).ready(function() {
 					// Update URL with calculated value
 					var currentOrder = url.searchParams.get('order');
 					url.searchParams.delete('sats');
+					url.searchParams.delete('btc');
 					var currencyCodes = [
 						"usd", "eur", "gbp", "cny", "jpy", "cad",
 						"rub", "chf", "brl", "aed", "try", "aud",
@@ -599,6 +600,8 @@ $( document ).ready(function() {
 
 					if (source_currency === 'sat') {
 						url.searchParams.set('sats', parseFloat(calculatedValue).toFixed(0));
+					} else if (source_currency === 'btc') {
+						url.searchParams.set('btc', parseFloat(calculatedValue).toFixed(8));
 					} else {
 						url.searchParams.set(source_currency, parseFloat(calculatedValue).toFixed(2));
 					}
@@ -617,6 +620,7 @@ $( document ).ready(function() {
 				// Clear all existing currency parameters but preserve order
 				var currentOrder = url.searchParams.get('order');
 				url.searchParams.delete('sats');
+				url.searchParams.delete('btc');
 				var currencyCodes = [
 					"usd", "eur", "gbp", "cny", "jpy", "cad",
 					"rub", "chf", "brl", "aed", "try", "aud",
@@ -635,6 +639,8 @@ $( document ).ready(function() {
 				// Update URL with the correct currency parameter
 				if (source_currency === 'sat') {
 					url.searchParams.set('sats', parseFloat(source_val).toFixed(0));
+				} else if (source_currency === 'btc') {
+					url.searchParams.set('btc', parseFloat(source_val).toFixed(8));
 				} else {
 					url.searchParams.set(source_currency, parseFloat(source_val).toFixed(2));
 				}
