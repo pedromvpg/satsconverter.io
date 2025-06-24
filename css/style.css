@@ -503,8 +503,9 @@ explicitly, e.g.
 .container {
   display: block;
   position: relative;
-  padding-left: 25px;
-  margin-bottom: 25px;
+  padding-left: 0;
+  padding-right: 25px;
+  margin-bottom: 8px;
   cursor: pointer;
   -webkit-user-select: none;
   -moz-user-select: none;
@@ -519,13 +520,15 @@ explicitly, e.g.
   cursor: pointer;
   height: 0;
   width: 0;
+  right: 0;
+  top: 0;
 }
 
 /* Create a custom checkbox */
 .checkmark {
   position: absolute;
   top: 0;
-  left: 0;
+  right: 0;
   height: 21px;
   width: 21px;
   background-color: #141414;
@@ -556,7 +559,7 @@ explicitly, e.g.
 
 /* Style the checkmark/indicator */
 #options .checkmark:after {
-  left: 8px;
+  right: 8px;
   top: 4px;
   width: 4px;
   height: 9px;
@@ -565,4 +568,16 @@ explicitly, e.g.
   -webkit-transform: rotate(45deg);
   -ms-transform: rotate(45deg);
   transform: rotate(45deg);
+}
+
+/* Style the option labels */
+.option-label {
+  color: #666;
+  font-size: 10px;
+  margin-right: 5px;
+  font-weight: 400;
+  line-height: 21px;
+  vertical-align: top;
+  text-transform: uppercase;
+  letter-spacing: 1px;
 }
