@@ -58,7 +58,97 @@ function formatLargeNumber(num, isEuropean = false) {
 
 
 $( document ).ready(function() {
-const url = new URL(window.location.href);
+
+	// Drag and Drop Currency Reordering
+	function initializeDragAndDrop() {
+		// Get saved order from URL params first, then localStorage, then default
+		var savedOrder = getSavedOrder();
+		
+		// Apply saved order to DOM
+		if (savedOrder && savedOrder.length > 0) {
+			applyOrder(savedOrder);
+		}
+		
+		// Initialize SortableJS
+		var fiatContainer = document.getElementById('fiat-container');
+		if (fiatContainer) {
+			Sortable.create(fiatContainer, {
+				animation: 150,
+				ghostClass: 'sortable-ghost',
+				chosenClass: 'sortable-chosen',
+				dragClass: 'sortable-drag',
+				onEnd: function(evt) {
+					saveOrder();
+				}
+			});
+		}
+	}
+	
+	function getSavedOrder() {
+		// Try URL parameters first
+		var urlParams = new URLSearchParams(window.location.search);
+		var orderParam = urlParams.get('order');
+		
+		if (orderParam) {
+			return orderParam.split(',').filter(function(currency) {
+				return document.getElementById('input_' + currency);
+			});
+		}
+		
+		// Try localStorage
+		if (typeof(Storage) !== "undefined") {
+			var savedOrder = localStorage.getItem('currencyOrder');
+			if (savedOrder) {
+				return savedOrder.split(',').filter(function(currency) {
+					return document.getElementById('input_' + currency);
+				});
+			}
+		}
+		
+		// Return default order (current DOM order)
+		return getCurrentOrder();
+	}
+	
+	function getCurrentOrder() {
+		var order = [];
+		$('#fiat-container .field.fiat').each(function() {
+			var currency = $(this).find('.value-input').data('currency');
+			if (currency) {
+				order.push(currency);
+			}
+		});
+		return order;
+	}
+	
+	function applyOrder(order) {
+		var container = $('#fiat-container');
+		order.forEach(function(currency) {
+			var element = $('#input_' + currency).closest('.field.fiat');
+			if (element.length) {
+				container.append(element);
+			}
+		});
+	}
+	
+	function saveOrder() {
+		var order = getCurrentOrder();
+		var orderString = order.join(',');
+		
+		// Save to localStorage
+		if (typeof(Storage) !== "undefined") {
+			localStorage.setItem('currencyOrder', orderString);
+		}
+		
+		// Update URL parameter
+		var url = new URL(window.location.href);
+		url.searchParams.set('order', orderString);
+		window.history.pushState({}, '', url);
+	}
+
+	// Initialize drag and drop
+	initializeDragAndDrop();
+
+	const url = new URL(window.location.href);
   if (url.searchParams.get('written') === 'true') {
       $('#written-number-check').prop('checked', true);
 			$(".writen-number").animate({opacity: 1}, 100);
@@ -265,7 +355,8 @@ const url = new URL(window.location.href);
 
 			writenNumber(european);
 
-			// Clear all existing currency parameters
+			// Clear all existing currency parameters but preserve order
+			var currentOrder = url.searchParams.get('order');
 			url.searchParams.delete('sats');
 			var currencyCodes = [
 				"usd", "eur", "gbp", "cny", "jpy", "cad",
@@ -276,6 +367,11 @@ const url = new URL(window.location.href);
 			currencyCodes.forEach(function(code) {
 				url.searchParams.delete(code);
 			});
+			
+			// Restore order parameter if it existed
+			if (currentOrder) {
+				url.searchParams.set('order', currentOrder);
+			}
 
 			// Update URL with the correct currency parameter
 			if (source_currency === 'sat') {

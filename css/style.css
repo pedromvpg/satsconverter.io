@@ -44,7 +44,7 @@ a:link, a:visited, a:hover, a:active {
   /* margin-top: 1rem; */
   /* padding: 0.5rem 0 0 0; */
   /* padding-top: 1em; */
-  background: #000;
+  background: transparent;
   border: none;
   /* border-top: #111 1px solid; */
   color: #fff;
@@ -580,4 +580,61 @@ explicitly, e.g.
   vertical-align: top;
   text-transform: uppercase;
   letter-spacing: 1px;
+}
+
+/* Drag and Drop Styles */
+#fiat-container {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+#fiat-container .field.fiat {
+  cursor: grab;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+#fiat-container .field.fiat:hover {
+  transform: scale(1.1);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+  border: 1px solid rgba(255,255,255,0.1);
+}
+
+#fiat-container .field.fiat:active {
+  cursor: grabbing;
+}
+
+#fiat-container .field.fiat.sortable-ghost {
+  opacity: 0.5;
+  transform: rotate(2deg);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+}
+
+#fiat-container .field.fiat.sortable-chosen {
+  cursor: grabbing;
+  transform: rotate(1deg) scale(1.02);
+  box-shadow: 
+    0 6px 16px rgba(0,0,0,0.5),
+    0 0 10px rgba(255,255,255,0.1);
+  z-index: 1000;
+  background: #0f0f0f;
+  border: 1px solid rgba(255,255,255,0.1);
+}
+
+#fiat-container .field.fiat.sortable-drag {
+  cursor: grabbing;
+  transform: rotate(3deg) scale(1.05);
+  box-shadow: 
+    0 8px 25px rgba(0,0,0,0.6),
+    0 0 20px rgba(255,255,255,0.3),
+    0 0 40px rgba(255,255,255,0.2),
+    0 0 60px rgba(255,255,255,0.1);
+  z-index: 1001;
+  background: #0a0a0a;
+  border: 1px solid rgba(255,255,255,0.2);
+}
+
+@media only screen and (min-width: 950px) {
+  #fiat-container .field.fiat.sortable-drag {
+    width: 20%;
+  }
 }
