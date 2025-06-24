@@ -510,6 +510,31 @@
                   	-webkit-appearance: none;
                   	margin: 0;
                   }
+                  
+                  .donation.loading {
+                  	opacity: 0.7;
+                  	cursor: not-allowed;
+                  	position: relative;
+                  }
+                  
+                  .donation.loading::after {
+                  	content: '';
+                  	position: absolute;
+                  	top: 50%;
+                  	left: 50%;
+                  	width: 16px;
+                  	height: 16px;
+                  	margin: -8px 0 0 -8px;
+                  	border: 2px solid transparent;
+                  	border-top: 2px solid #fff;
+                  	border-radius: 50%;
+                  	animation: spin 1s linear infinite;
+                  }
+                  
+                  @keyframes spin {
+                  	0% { transform: rotate(0deg); }
+                  	100% { transform: rotate(360deg); }
+                  }
                 </style>
                 <style>
 
@@ -633,18 +658,82 @@
     if (!window.btcpay) {
         var script = document.createElement('script');
         script.src = "https://btcpay989117.lndyn.com/modal/btcpay.js";
+        script.onload = function() {
+            console.log('BTCPay script loaded successfully');
+        };
+        script.onerror = function() {
+            console.error('Failed to load BTCPay script');
+        };
         document.getElementsByTagName('head')[0].append(script);
     }
+    
     function onBTCPayFormSubmit(event) {
         event.preventDefault();
+        console.log('BTCPay form submitted');
+        
+        // Add loading state to the button
+        var submitButton = event.target.querySelector('button[type="submit"]');
+        submitButton.classList.add('loading');
+        submitButton.disabled = true;
+        submitButton.textContent = 'Loading...';
+        
         var xhttp = new XMLHttpRequest();
         xhttp.onreadystatechange = function() {
-            if (this.readyState == 4 && this.status == 200 && this.responseText) {
-                window.btcpay.showInvoice(JSON.parse(this.responseText).invoiceId);
+            console.log('BTCPay response - readyState:', this.readyState, 'status:', this.status);
+            if (this.readyState == 4) {
+                // Remove loading state
+                submitButton.classList.remove('loading');
+                submitButton.disabled = false;
+                submitButton.textContent = 'DONATE';
+                
+                if (this.status == 200 && this.responseText) {
+                    console.log('BTCPay response:', this.responseText);
+                    try {
+                        var response = JSON.parse(this.responseText);
+                        console.log('BTCPay invoice ID:', response.invoiceId);
+                        if (window.btcpay && window.btcpay.showInvoice) {
+                            window.btcpay.showInvoice(response.invoiceId);
+                        } else {
+                            console.error('BTCPay modal not available');
+                            alert('Payment system not available. Please try again later.');
+                        }
+                    } catch (e) {
+                        console.error('Failed to parse BTCPay response:', e);
+                        alert('Payment system error. Please try again later.');
+                    }
+                } else {
+                    console.error('BTCPay request failed - status:', this.status, 'response:', this.responseText);
+                    alert('Payment system temporarily unavailable. Please try again later.');
+                }
             }
         };
-        xhttp.open('POST', event.target.getAttribute('action'), true);
-        xhttp.send(new FormData(event.target));
+        xhttp.onerror = function() {
+            console.error('BTCPay network error');
+            // Remove loading state on error
+            submitButton.classList.remove('loading');
+            submitButton.disabled = false;
+            submitButton.textContent = 'DONATE';
+            alert('Network error. Please check your connection and try again.');
+        };
+        
+        // Get form data manually to avoid Inputmask conflict
+        var form = event.target;
+        var formData = new URLSearchParams();
+        
+        // Add all form fields manually
+        var storeId = form.querySelector('input[name="storeId"]').value;
+        var jsonResponse = form.querySelector('input[name="jsonResponse"]').value;
+        var price = form.querySelector('input[name="price"]').value;
+        var currency = form.querySelector('select[name="currency"]').value;
+        
+        formData.append('storeId', storeId);
+        formData.append('jsonResponse', jsonResponse);
+        formData.append('price', price);
+        formData.append('currency', currency);
+        
+        xhttp.open('POST', form.getAttribute('action'), true);
+        xhttp.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+        xhttp.send(formData.toString());
     }
 
     function handleSliderChange(event) {
