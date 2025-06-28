@@ -1,0 +1,1083 @@
+$( document ).ready(function() {
+
+	// Initialize RateToBTC globally
+	var RateToBTC = {
+		sat: 100000000,
+		btc: 1
+	};
+
+	function writenNumber(european){
+		// Check if written numbers checkbox is checked
+		var writtenNumbersEnabled = $('#written-number-check').is(':checked');
+		
+		$(".writen-number").each(function() {
+				var value = $(this).siblings(".value-input").val();
+				
+				// Handle empty or invalid values
+				if (!value || value.trim() === '' || value === 'n/a') {
+					$(this).text('');
+					return;
+				}
+				
+				// Use the existing unformatNumber function for consistency
+				var source_val = unformatNumber(value);
+				
+				// Check if the parsed value is valid
+				if (isNaN(source_val) || source_val === 0) {
+					$(this).text('');
+					return;
+				}
+				
+				// Only populate text if written numbers are enabled
+				if (writtenNumbersEnabled) {
+					$(this).text(formatLargeNumber(source_val, european));
+				} else {
+					$(this).text('');
+				}
+		});
+	}
+
+	function formatLargeNumber(num, isEuropean = false) {
+		num = Number(num);
+		if (isNaN(num)) {
+			return 'Input must be a valid number';
+		}
+
+		// https://en.wikipedia.org/wiki/Long_and_short_scales
+		const thresholds = isEuropean
+			? [
+				{ value: 1e21, word: 'trilliard' },
+				{ value: 1e18, word: 'trillion' },       // European trillion
+				{ value: 1e15, word: 'billiard' },
+				{ value: 1e12, word: 'billion' },        // European billion
+				{ value: 1e9, word: 'milliard' },
+				{ value: 1e6, word: 'million' },
+				{ value: 1e3, word: 'thousand' }
+			]
+			: [
+				{ value: 1e18, word: 'sextillion' },
+				{ value: 1e18, word: 'quintillion' },
+				{ value: 1e15, word: 'quadrillion' },
+				{ value: 1e12, word: 'trillion' },       // Standard trillion
+				{ value: 1e9, word: 'billion' },         // Standard billion
+				{ value: 1e6, word: 'million' },
+				{ value: 1e3, word: 'thousand' }
+			];
+
+		const isNegative = num < 0;
+		num = Math.abs(num);
+
+		for (const { value, word } of thresholds) {
+			if (num >= value) {
+				const rounded = Math.round(num / value);
+				const symbol = (num !== rounded * value) ? '~' : ''; // Show '~' if num is not equal to rounded * value
+				return `${isNegative ? '-' : ''}${symbol}${rounded} ${word}${rounded > 1 ? 's' : ''}`;
+			}
+		}
+		return `${isNegative ? '-' : ''}${num}`;
+	}
+
+	// Math Expression Parser
+	function parseMathExpression(input) {
+		// Remove commas and extra spaces
+		input = input.replace(/[, ]/g, '');
+		
+		// Check if input contains math operators
+		if (/[\+\-\*\/]/.test(input)) {
+			try {
+				// Validate the expression - only allow numbers and basic operators
+				if (/^[\d\+\-\*\/\.\(\)]+$/.test(input)) {
+					// Check for division by zero
+					if (input.includes('/0') && !input.includes('/0.')) {
+						return null; // Division by zero
+					}
+					
+					// Evaluate the expression
+					var result = eval(input);
+					
+					// Check if result is valid number
+					if (isFinite(result) && !isNaN(result)) {
+						return result;
+					}
+				}
+			} catch (e) {
+				// Invalid expression, return null
+				return null;
+			}
+		}
+		
+		// No math expression or invalid, return original input
+		var parsed = parseFloat(input.replace(/[, ]/g, ''));
+		return isNaN(parsed) ? 0 : parsed;
+	}
+
+	// Drag and Drop Currency Reordering
+	function initializeDragAndDrop() {
+		// Get saved order from URL params only
+		var savedOrder = getSavedOrder();
+		
+		// Apply saved order to DOM
+		if (savedOrder && savedOrder.length > 0) {
+			applyOrder(savedOrder);
+		}
+		
+		// Initialize SortableJS
+		var fiatContainer = document.getElementById('fiat-container');
+		if (fiatContainer) {
+			Sortable.create(fiatContainer, {
+				animation: 150,
+				ghostClass: 'sortable-ghost',
+				chosenClass: 'sortable-chosen',
+				dragClass: 'sortable-drag',
+				onEnd: function(evt) {
+					saveOrder();
+				}
+			});
+		}
+	}
+	
+	function getSavedOrder() {
+		// Try URL parameters only
+		var urlParams = new URLSearchParams(window.location.search);
+		var orderParam = urlParams.get('order');
+		
+		if (orderParam) {
+			return orderParam.split(',').filter(function(currency) {
+				return document.getElementById('input_' + currency);
+			});
+		}
+		
+		// Return default order (current DOM order)
+		return getCurrentOrder();
+	}
+	
+	function getCurrentOrder() {
+		var order = [];
+		$('#fiat-container .field.fiat').each(function() {
+			var currency = $(this).find('.value-input').data('currency');
+			if (currency) {
+				order.push(currency);
+			}
+		});
+		return order;
+	}
+	
+	function applyOrder(order) {
+		var container = $('#fiat-container');
+		order.forEach(function(currency) {
+			var element = $('#input_' + currency).closest('.field.fiat');
+			if (element.length) {
+				container.append(element);
+			}
+		});
+	}
+	
+	function saveOrder() {
+		var order = getCurrentOrder();
+		var orderString = order.join(',');
+		
+		// Update URL parameter only
+		var url = new URL(window.location.href);
+		url.searchParams.set('order', orderString);
+		window.history.pushState({}, '', url);
+	}
+
+	// Initialize custom date picker
+	initializeDragAndDrop();
+	initializeDatepicker();
+
+	// Initialize Custom Date Picker (replacing problematic Flatpickr)
+	function initializeDatepicker() {
+		console.log('Initializing custom date picker...');
+		setupCustomDatepicker();
+	}
+
+	// Custom date picker implementation
+	function setupCustomDatepicker() {
+		console.log('Setting up custom date picker...');
+		
+		var pickerButton = document.getElementById('date-picker-button');
+		
+		if (!pickerButton) {
+			console.error('Date picker button not found');
+			return;
+		}
+		
+		// Set initial value from URL if present, otherwise use today
+		var urlParams = new URLSearchParams(window.location.search);
+		var timestamp = urlParams.get('timestamp');
+		
+		var initialDate = new Date();
+		if (timestamp) {
+			console.log('Found timestamp in URL:', timestamp);
+			initialDate = new Date(parseInt(timestamp) * 1000);
+			console.log('Setting initial date from URL:', initialDate);
+		} else {
+			console.log('Setting today as default date:', initialDate);
+			fetchCurrentPrices();
+		}
+		
+		// Update button text
+		updateButtonText(initialDate);
+		
+		// Add click handler to the button
+		pickerButton.addEventListener('click', function(e) {
+			e.preventDefault();
+			console.log('=== Picker button clicked (custom) ===');
+			console.log('Button element:', pickerButton);
+			console.log('Initial date:', initialDate);
+			showCustomDatePicker(initialDate);
+		});
+		
+		console.log('Custom date picker setup complete');
+	}
+
+	// Show custom date picker modal
+	function showCustomDatePicker(currentDate) {
+		console.log('Showing simplified date picker for date:', currentDate);
+		
+		// Create a small but visible date input
+		var dateInput = document.createElement('input');
+		dateInput.type = 'date';
+		dateInput.style.cssText = `
+			position: fixed;
+			top: 50%;
+			left: 50%;
+			transform: translate(-50%, -50%);
+			width: 1px;
+			height: 1px;
+			opacity: 0.01;
+			z-index: 10000;
+		`;
+		
+		console.log('Created date input element:', dateInput);
+		
+		// Set initial value
+		var formattedDate = currentDate.toISOString().split('T')[0];
+		dateInput.value = formattedDate;
+		console.log('Set date input value to:', formattedDate);
+		
+		// Add to page temporarily
+		document.body.appendChild(dateInput);
+		console.log('Added date input to DOM');
+		
+		// Add change event listener
+		dateInput.addEventListener('change', function(e) {
+			var selectedDate = new Date(e.target.value);
+			console.log('=== Simplified date picker date selected ===');
+			console.log('Selected date:', selectedDate);
+			handleDateChange(selectedDate);
+			
+			// Remove the input from DOM
+			document.body.removeChild(dateInput);
+		});
+		
+		// Add blur event listener to clean up if user cancels
+		dateInput.addEventListener('blur', function() {
+			setTimeout(function() {
+				if (document.body.contains(dateInput)) {
+					document.body.removeChild(dateInput);
+				}
+			}, 100);
+		});
+		
+		// Focus and click the input to open the native date picker
+		setTimeout(function() {
+			console.log('Attempting to focus and click date input...');
+			dateInput.focus();
+			dateInput.click();
+			console.log('Focus and click completed');
+		}, 10);
+	}
+
+	function updateButtonText(date) {
+		var pickerButton = document.getElementById('date-picker-button');
+		if (pickerButton) {
+			var formattedDate = formatDateForDisplay(date);
+			pickerButton.querySelector('.picker-value').textContent = formattedDate;
+		}
+	}
+	
+	function handleDateChange(selectedDate) {
+		console.log('=== handleDateChange called ===');
+		console.log('Selected date parameter:', selectedDate);
+		console.log('Selected date type:', typeof selectedDate);
+		console.log('Selected date instanceof Date:', selectedDate instanceof Date);
+		
+		if (!selectedDate) {
+			console.error('handleDateChange: selectedDate is null or undefined');
+			return;
+		}
+		
+		try {
+			var timestamp = Math.floor(selectedDate.getTime() / 1000);
+			console.log('Converted to timestamp:', timestamp);
+			console.log('Original date time:', selectedDate.getTime());
+			console.log('Math.floor result:', Math.floor(selectedDate.getTime() / 1000));
+			
+			// Update the button text to show the selected date
+			console.log('Updating button text...');
+			updateButtonText(selectedDate);
+			
+			// Update URL with timestamp
+			console.log('Updating URL with timestamp...');
+			var url = new URL(window.location.href);
+			url.searchParams.set('timestamp', timestamp);
+			window.history.pushState({}, '', url);
+			
+			console.log('URL updated with timestamp:', url.toString());
+			
+			// Fetch historical prices
+			console.log('Fetching historical prices...');
+			fetchHistoricalPrices(timestamp);
+		} catch (error) {
+			console.error('=== Error in handleDateChange ===');
+			console.error('Error details:', error);
+			console.error('Error stack:', error.stack);
+		}
+	}
+
+	// Function to format date for display (e.g., "24 Jun 2025")
+	function formatDateForDisplay(date) {
+		const options = {
+			day: 'numeric',
+			month: 'short',
+			year: 'numeric'
+		};
+		return date.toLocaleDateString('en-US', options);
+	}
+
+	// Function to fetch historical prices
+	function fetchHistoricalPrices(timestamp) {
+		console.log('=== fetchHistoricalPrices called ===');
+		console.log('Timestamp:', timestamp);
+		console.log('Current RateToBTC before fetch:', RateToBTC);
+		
+		var historicalURL = "https://mempool.space/api/v1/historical-price?currency=EUR&timestamp=" + timestamp;
+		console.log('Historical URL:', historicalURL);
+		
+		$.getJSON(historicalURL, function(data) {
+			console.log('=== Historical API response received ===');
+			console.log('Full response:', data);
+			
+			if (data && data.prices && data.prices.length > 0) {
+				var historicalData = data.prices[0];
+				var exchangeRates = data.exchangeRates;
+				console.log('Historical data:', historicalData);
+				console.log('Exchange rates:', exchangeRates);
+				
+				// Update RateToBTC with historical data
+				updateRatesWithHistoricalData(historicalData, exchangeRates);
+				console.log('RateToBTC after historical update:', RateToBTC);
+				
+				// Update sats per currency display
+				updateSatsPerCurrency();
+				console.log('Sats per currency updated');
+				
+				// Load URL parameters after historical prices are available
+				loadUrlParameters();
+				console.log('URL parameters loaded');
+				
+			} else {
+				console.error('Invalid historical data structure:', data);
+				// Fallback to current prices
+				console.log('Falling back to current prices...');
+				fetchCurrentPrices();
+			}
+		}).fail(function(xhr, status, error) {
+			console.error('=== Failed to fetch historical prices ===');
+			console.error('Status:', status);
+			console.error('Error:', error);
+			console.error('XHR:', xhr);
+			console.error('Response text:', xhr.responseText);
+			
+			// Fallback to current prices
+			console.log('Falling back to current prices...');
+			fetchCurrentPrices();
+		});
+	}
+	
+	function forceRecalculateAllFields() {
+		console.log('=== forceRecalculateAllFields called ===');
+		
+		// Get the currently active input or default to sats
+		var activeInput = $(".value-input.active");
+		var source_currency = "sat";
+		var source_val = 0; // Default to 0 sat
+		
+		if (activeInput.length > 0) {
+			source_currency = activeInput.data("currency");
+			source_val = unformatNumber(activeInput.val());
+			console.log('Using active input:', source_currency, 'value:', source_val);
+		} else {
+			// If no active input, use the sats input value
+			var satsInput = $('#input_sat');
+			if (satsInput.length > 0) {
+				source_val = unformatNumber(satsInput.val());
+				console.log('Using sats input value:', source_val);
+			}
+		}
+		
+		console.log('Recalculating with:', source_currency, source_val);
+		
+		// Recalculate conversions
+		calcConversion(source_val, source_currency, false);
+		
+		// Update written numbers
+		writenNumber(european);
+		
+		console.log('=== forceRecalculateAllFields complete ===');
+	}
+
+	// Function to update rates with historical data
+	function updateRatesWithHistoricalData(historicalData, exchangeRates) {
+		console.log('=== updateRatesWithHistoricalData called ===');
+		console.log('Historical data:', historicalData);
+		console.log('Exchange rates:', exchangeRates);
+		console.log('RateToBTC before update:', RateToBTC);
+		
+		// Clear existing rates
+		RateToBTC = {
+			sat: 100000000,
+			btc: 1
+		};
+		
+		// Get USD rate as base (it's always available in historical data)
+		var usdRate = historicalData.USD;
+		if (!usdRate || usdRate <= 0) {
+			console.error('USD rate not available in historical data');
+			return;
+		}
+		
+		// Set USD rate directly
+		RateToBTC.usd = usdRate;
+		console.log('Set USD rate:', usdRate);
+		
+		// Calculate other rates using exchange rates
+		if (exchangeRates.USDEUR) {
+			RateToBTC.eur = usdRate * exchangeRates.USDEUR;
+			console.log('Set EUR rate:', RateToBTC.eur, '(USD *', exchangeRates.USDEUR, ')');
+		}
+		
+		if (exchangeRates.USDGBP) {
+			RateToBTC.gbp = usdRate * exchangeRates.USDGBP;
+			console.log('Set GBP rate:', RateToBTC.gbp, '(USD *', exchangeRates.USDGBP, ')');
+		}
+		
+		if (exchangeRates.USDCAD) {
+			RateToBTC.cad = usdRate * exchangeRates.USDCAD;
+			console.log('Set CAD rate:', RateToBTC.cad, '(USD *', exchangeRates.USDCAD, ')');
+		}
+		
+		if (exchangeRates.USDCHF) {
+			RateToBTC.chf = usdRate * exchangeRates.USDCHF;
+			console.log('Set CHF rate:', RateToBTC.chf, '(USD *', exchangeRates.USDCHF, ')');
+		}
+		
+		if (exchangeRates.USDAUD) {
+			RateToBTC.aud = usdRate * exchangeRates.USDAUD;
+			console.log('Set AUD rate:', RateToBTC.aud, '(USD *', exchangeRates.USDAUD, ')');
+		}
+		
+		if (exchangeRates.USDJPY) {
+			RateToBTC.jpy = usdRate * exchangeRates.USDJPY;
+			console.log('Set JPY rate:', RateToBTC.jpy, '(USD *', exchangeRates.USDJPY, ')');
+		}
+		
+		// Set unsupported currencies to 'n/a' (these are not available in the historical API)
+		var unsupportedCurrencies = ['cny', 'rub', 'brl', 'aed', 'try', 'mxn', 'ils', 'zar', 'thb', 'inr', 'sek', 'sar', 'ars'];
+		unsupportedCurrencies.forEach(function(currency) {
+			RateToBTC[currency] = 'n/a';
+			console.log('Set', currency, 'to n/a (unsupported in historical API)');
+		});
+		
+		console.log('RateToBTC after update:', RateToBTC);
+		console.log('=== updateRatesWithHistoricalData complete ===');
+	}
+
+	// Function to fetch current prices
+	function fetchCurrentPrices() {
+		var priceURL = "https://pvxg.net/bitcoin-price/index.php";
+		
+		$.getJSON(priceURL, function(data) {
+			RateToBTC = {
+				sat: 100000000,
+				btc: 1,
+				usd: data.USD,
+				eur: data.EUR,
+				gbp: data.GBP,
+				cny: data.CNY,
+				jpy: data.JPY,
+				cad: data.CAD,
+				chf: data.CHF,
+				rub: data.RUB,
+				brl: data.BRL,
+				aed: data.AED,
+				try: data.TRY,
+				aud: data.AUD,
+				mxn: data.MXN,
+				thb: data.THB,
+				ils: data.ILS,
+				inr: data.INR,
+				zar: data.ZAR,
+				sek: data.SEK,
+				sar: data.SAR,
+				ars: data.ARS
+			};
+			
+			// Update sats per currency display
+			updateSatsPerCurrency();
+			
+			// Load URL parameters after prices are available (only if not in historical mode)
+			var urlParams = new URLSearchParams(window.location.search);
+			if (!urlParams.get('timestamp')) {
+				loadUrlParameters();
+			}
+		});
+	}
+
+	const url = new URL(window.location.href);
+  if (url.searchParams.get('written') === 'true') {
+      $('#written-number-check').prop('checked', true);
+			$(".writen-number").animate({opacity: 1}, 100);
+			$(".writen-number").animate({fontSize: '8px'}, 100);
+			// Note: writenNumber will be called after values are loaded
+  }
+
+  $('#written-number-check').on('change', function() {
+      const checkbox = $(this);
+      const currentUrl = window.location.href;
+      const url = new URL(currentUrl);
+      if (checkbox.is(':checked')) {
+          url.searchParams.set('written', 'true');
+					$(".writen-number").animate({opacity: 1}, 100);
+					$(".writen-number").animate({fontSize: '8px'}, 100);
+					// Populate the written numbers
+					writenNumber(european);
+      } else {
+          url.searchParams.delete('written');
+					$(".writen-number").animate({opacity: 0}, 100);
+					$(".writen-number").animate({fontSize: '0px'}, 100);
+					// Clear the written numbers
+					$(".writen-number").text('');
+      }
+      window.history.pushState({}, '', url);
+  });
+
+
+
+	var european = false;
+	if (url.searchParams.get('european') === 'true') {
+			$('#european-check').prop('checked', true);
+			european = true;
+			// Don't call writenNumber here - wait until values are loaded
+	}
+
+	$('#european-check').on('change', function() {
+			const checkbox = $(this);
+			const currentUrl = window.location.href;
+			const url = new URL(currentUrl);
+			if (checkbox.is(':checked')) {
+					url.searchParams.set('european', 'true');
+					european = true;
+					writenNumber(european);
+			} else {
+					url.searchParams.delete('european');
+					european = false;
+					writenNumber(european);
+			}
+			window.history.pushState({}, '', url);
+	});
+
+
+
+	// Custom formatting system to replace Inputmask
+	var isProgrammaticUpdate = false; // Flag to prevent input handler interference
+	
+	function formatNumber(value, currency) {
+		// First, clean the value by removing commas to get the actual number
+		var cleanValue = unformatNumber(value);
+		
+		if (currency === "sat") {
+			// Satoshis: whole numbers with commas
+			return Math.round(cleanValue || 0).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+		} else if (currency === "btc") {
+			// Bitcoin: 8 decimal places
+			return (cleanValue || 0).toFixed(8);
+		} else {
+			// Fiat: 2 decimal places with commas
+			return (cleanValue || 0).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+		}
+	}
+
+	function unformatNumber(value) {
+		// Convert to string and remove commas, then convert to number
+		return parseFloat(String(value).replace(/,/g, '')) || 0;
+	}
+
+	// Apply initial formatting to all inputs
+	$(".value-input").each(function() {
+		var $input = $(this);
+		var currency = $input.data("currency");
+		var currentValue = $input.val();
+		
+		if (currentValue && currentValue !== '0.00000001') {
+			isProgrammaticUpdate = true;
+			$input.val(formatNumber(currentValue, currency));
+			isProgrammaticUpdate = false;
+		}
+	});
+
+	// Handle input without real-time formatting
+	$(".value-input").on('input', function(e) {
+		if (isProgrammaticUpdate) return; // Skip if this is a programmatic update
+		
+		var $input = $(this);
+		var value = $input.val();
+		var currency = $input.data("currency");
+		
+		// Check if this is a math expression
+		if (/[\+\-\*\/\(\)]/.test(value)) {
+			// Math mode - don't format, just add visual feedback
+			$input.addClass('math-mode');
+			$input.removeClass('math-calculating');
+		} else {
+			// Normal mode - remove math mode but don't format yet
+			$input.removeClass('math-mode');
+			
+			// Validate input - only allow numbers, decimals, and commas
+			var cleanValue = value.replace(/[^\d.,]/g, '');
+			
+			// Handle multiple decimal points - keep only the first one
+			var parts = cleanValue.split('.');
+			if (parts.length > 2) {
+				cleanValue = parts[0] + '.' + parts.slice(1).join('');
+			}
+			
+			// Handle multiple commas - remove all but keep structure
+			cleanValue = cleanValue.replace(/,/g, '');
+			
+			// Update value if it changed
+			if (cleanValue !== value) {
+				var cursorPos = $input[0].selectionStart;
+				var valueBeforeCursor = value.substring(0, cursorPos);
+				var commasBeforeCursor = (valueBeforeCursor.match(/,/g) || []).length;
+				var cleanValueBeforeCursor = cleanValue.substring(0, cursorPos - commasBeforeCursor);
+				
+				$input.val(cleanValue);
+				
+				// Restore cursor position
+				setTimeout(function() {
+					var newCursorPos = Math.min(cleanValueBeforeCursor.length, cleanValue.length);
+					$input[0].setSelectionRange(newCursorPos, newCursorPos);
+				}, 0);
+			}
+		}
+		
+		// Check if user is trying to type math operators as text
+		if (value.includes('plus') || value.includes('minus') || value.includes('times') || value.includes('divide')) {
+			var newValue = value
+				.replace(/plus/g, '+')
+				.replace(/minus/g, '-')
+				.replace(/times/g, '*')
+				.replace(/divide/g, '/');
+			
+			if (newValue !== value) {
+				$input.val(newValue);
+				$input.addClass('math-mode');
+			}
+		}
+	});
+
+	// Handle paste events for math operators
+	$(".value-input").on('paste', function(e) {
+		var $input = $(this);
+		var pastedText = (e.originalEvent || e).clipboardData.getData('text/plain');
+		
+		if (/[\+\-\*\/\(\)]/.test(pastedText)) {
+			e.preventDefault();
+			var currentValue = $input.val();
+			var cursorPos = $input[0].selectionStart;
+			
+			// Add the pasted text at cursor position
+			var newValue = currentValue.slice(0, cursorPos) + pastedText + currentValue.slice(cursorPos);
+			$input.val(newValue);
+			$input.addClass('math-mode');
+			
+			// Set cursor position after the pasted text
+			setTimeout(function() {
+				$input[0].setSelectionRange(cursorPos + pastedText.length, cursorPos + pastedText.length);
+				$input.focus();
+			}, 0);
+		}
+	});
+
+	// Handle Enter key to compute and blur
+	$(".value-input").on('keydown', function(e) {
+		if (e.keyCode === 13) { // Enter key
+			e.preventDefault();
+			var $input = $(this);
+			var value = $input.val();
+			var currency = $input.data("currency");
+			
+			// Check if this is a math expression
+			if (/[\+\-\*\/\(\)]/.test(value)) {
+				var calculatedValue = parseMathExpression(value);
+				
+				if (calculatedValue !== null) {
+					// Format the calculated result
+					isProgrammaticUpdate = true;
+					var formattedResult = formatNumber(calculatedValue, currency);
+					$input.val(formattedResult);
+					$input.removeClass('math-mode');
+				}
+			} else {
+				// Format the number
+				isProgrammaticUpdate = true;
+				var formattedResult = formatNumber(value, currency);
+				$input.val(formattedResult);
+			}
+			
+			// Blur the field
+			$input.blur();
+			
+			// Reset the flag after a short delay to allow blur event to complete
+			setTimeout(function() {
+				isProgrammaticUpdate = false;
+			}, 10);
+		}
+	});
+
+	// Handle blur event to format numbers
+	$(".value-input").on('blur', function(e) {
+		if (isProgrammaticUpdate) return; // Skip if this is a programmatic update
+		
+		var $input = $(this);
+		var value = $input.val();
+		var currency = $input.data("currency");
+		
+		// Check if this is a math expression
+		if (/[\+\-\*\/\(\)]/.test(value)) {
+			var calculatedValue = parseMathExpression(value);
+			
+			if (calculatedValue !== null) {
+				// Format the calculated result
+				isProgrammaticUpdate = true;
+				var formattedResult = formatNumber(calculatedValue, currency);
+				$input.val(formattedResult);
+				$input.removeClass('math-mode');
+				isProgrammaticUpdate = false;
+			}
+		} else if (value && value.trim() !== '') {
+			// Format the number
+			isProgrammaticUpdate = true;
+			var formattedResult = formatNumber(value, currency);
+			$input.val(formattedResult);
+			isProgrammaticUpdate = false;
+		}
+	});
+
+	var $currency_inputs = $(".value-input"),
+		$btc_input = $(".bitcoin"),
+		currency,
+		btc_max_stock = 21000000
+
+
+
+	var priceURL = "https://pvxg.net/bitcoin-price/index.php";
+
+	// Check if we have a timestamp in URL for historical data
+	var urlParams = new URLSearchParams(window.location.search);
+	var timestamp = urlParams.get('timestamp');
+	
+	if (timestamp) {
+		// Fetch historical prices
+		fetchHistoricalPrices(timestamp);
+	} else {
+		// Fetch current prices
+		fetchCurrentPrices();
+	}
+
+	// Set up interval for current price updates (only when not in historical mode)
+	setInterval(function() {
+		if (!urlParams.get('timestamp')) {
+			fetchCurrentPrices();
+		}
+	}, (1000*60*5));
+
+	// Handle URL parameters for initial loading - moved to after price fetching
+	function loadUrlParameters() {
+		console.log('=== Loading URL parameters ===');
+		
+		// Check for sats parameter first (legacy support)
+		if (urlParams.get('sats')) {
+			var loadedCurrency = 'sat';
+			var loadedValue = urlParams.get('sats');
+			console.log('Found sats parameter:', loadedValue);
+			
+			$('#input_' + loadedCurrency).val(loadedValue);
+			calcConversion(parseFloat(loadedValue), loadedCurrency, false);
+			writenNumber(european);
+			return; // Exit early if sats parameter found
+		}
+		
+		// Check for other currency parameters
+		var currencyCodes = [
+			"usd", "eur", "gbp", "cny", "jpy", "cad",
+			"rub", "chf", "brl", "aed", "try", "aud",
+			"mxn", "ils", "zar", "thb", 'inr', 'sek',
+			'sar', /*'vef',*/ "ars"
+		];
+		
+		for (var i = 0; i < currencyCodes.length; i++) {
+			var code = currencyCodes[i];
+			if (urlParams.get(code)) {
+				var loadedCurrency = code;
+				var loadedValue = urlParams.get(code);
+				console.log('Found', code, 'parameter:', loadedValue);
+				
+				$('#input_' + loadedCurrency).val(loadedValue);
+				calcConversion(parseFloat(loadedValue), loadedCurrency, false);
+				writenNumber(european);
+				return; // Exit early if currency parameter found
+			}
+		}
+		
+		console.log('No currency parameters found in URL');
+		
+		// Set default value of 0 sats when no parameters are found
+		console.log('Setting default value: 0 sats');
+		$('#input_sat').val('0');
+		calcConversion(0, 'sat', false);
+		writenNumber(european);
+	}
+
+	// Initialize sats per currency display
+	function updateSatsPerCurrency() {
+		$("#satsfiats").empty();
+		var currencyCodes = [
+        "usd", "eur", "gbp", "cny", "jpy", "cad",
+        "rub", "chf", "brl", "aed", "try", "aud",
+        "mxn", "ils", "zar", "thb", 'inr', 'sek',
+				'sar', /*'vef',*/ "ars"
+    ];
+
+    currencyCodes.forEach(function(code) {
+			if (RateToBTC[code] && RateToBTC[code] !== 'n/a') {
+        var satPerCurrency = 1 / (RateToBTC[code] / 1) * 100000000;
+				var satsPerElement = $('<div>', {
+		        html: "<span class='satsfiat'>"+satPerCurrency.toFixed(0)+"</span> sats per 1 " + code.toUpperCase()
+		    });
+		    $("#satsfiats").append(satsPerElement);
+			}
+		});
+	}
+
+	// Helper function to update URL parameters
+	function updateUrlParameters(source_currency, source_val) {
+		var url = new URL(window.location.href);
+		var currentOrder = url.searchParams.get('order');
+		
+		// Clear all existing currency parameters but preserve order
+		url.searchParams.delete('sats');
+		url.searchParams.delete('btc');
+		var currencyCodes = [
+			"usd", "eur", "gbp", "cny", "jpy", "cad",
+			"rub", "chf", "brl", "aed", "try", "aud",
+			"mxn", "ils", "zar", "thb", 'inr', 'sek',
+			'sar', /*'vef',*/ "ars"
+		];
+		currencyCodes.forEach(function(code) {
+			url.searchParams.delete(code);
+		});
+		
+		// Restore order parameter if it existed
+		if (currentOrder) {
+			url.searchParams.set('order', currentOrder);
+		}
+
+		// Update URL with the correct currency parameter
+		if (source_currency === 'sat') {
+			url.searchParams.set('sats', parseFloat(source_val).toFixed(0));
+		} else if (source_currency === 'btc') {
+			url.searchParams.set('btc', parseFloat(source_val).toFixed(8));
+		} else {
+			url.searchParams.set(source_currency, parseFloat(source_val).toFixed(2));
+		}
+		window.history.pushState({}, '', url);
+	}
+
+		function calcConversion(source_val, source_currency, firstLoad){
+		console.log('=== calcConversion called ===');
+		console.log('Source value:', source_val);
+		console.log('Source currency:', source_currency);
+		console.log('First load:', firstLoad);
+		console.log('Current RateToBTC:', RateToBTC);
+		
+			var	btc_input_value = parseFloat($btc_input.val().replace(/,/g, '')).toFixed(8);
+		console.log('Initial BTC input value:', btc_input_value);
+
+			//set BTC max if user is editing BTC input
+			if( btc_input_value > btc_max_stock ){
+				btc_input_value = btc_max_stock
+			isProgrammaticUpdate = true;
+				$btc_input.val(btc_max_stock)
+			isProgrammaticUpdate = false;
+			console.log('BTC value capped at max:', btc_max_stock);
+			}
+
+
+			// Get convertion to BTC from the current currency
+
+			if(source_currency == "sat"){
+			isProgrammaticUpdate = true;
+			var newBtcValue = parseFloat(source_val / RateToBTC[source_currency]).toFixed(8);
+			$btc_input.val(newBtcValue);
+			isProgrammaticUpdate = false;
+			console.log('Converted sats to BTC:', source_val, '/', RateToBTC[source_currency], '=', newBtcValue);
+			}
+			else if(source_currency == "btc"){
+				btc_input_value = btc_input_value;
+			console.log('Source is BTC, keeping value:', btc_input_value);
+			}
+			else{
+			isProgrammaticUpdate = true;
+			var newBtcValue = parseFloat( parseFloat(source_val) / parseFloat(RateToBTC[source_currency]) ).toFixed(8);
+			$btc_input.val(newBtcValue);
+			isProgrammaticUpdate = false;
+			console.log('Converted', source_currency, 'to BTC:', source_val, '/', RateToBTC[source_currency], '=', newBtcValue);
+			}
+
+			// Updates BTC value
+			btc_input_value = parseFloat($btc_input.val().replace(/,/g, '')).toFixed(8);
+		console.log('Updated BTC input value:', btc_input_value);
+
+			// Updates all inputs depending on its rate to BTC
+		console.log('Updating all currency fields...');
+			$(".value-input:not('.active, .bitcoin')").each(function(){
+				currency = $(this).data("currency");
+			console.log('Processing currency:', currency);
+			
+			// Check if currency is available (not 'n/a')
+			if (RateToBTC[currency] === 'n/a') {
+				$(this).val('n/a');
+				console.log('Set', currency, 'to n/a (not available)');
+				return;
+			}
+			
+			var calculatedValue = RateToBTC[currency] * btc_input_value;
+			console.log('Calculated', currency, 'value:', RateToBTC[currency], '*', btc_input_value, '=', calculatedValue);
+			
+			isProgrammaticUpdate = true;
+			// Format the value properly based on currency type using the formatNumber function
+			var formattedValue = formatNumber(calculatedValue, currency);
+			$(this).val(formattedValue);
+			console.log('Formatted', currency, ':', calculatedValue, '->', formattedValue);
+			isProgrammaticUpdate = false;
+			
+				(( RateToBTC['sat'] * btc_input_value ) == 1) ? $("#sats-label").text('⚪️ sat') : $("#sats-label").text('⚪️ sats');
+			})
+
+		console.log('=== calcConversion complete ===');
+		
+		// Update URL parameters with the source currency and value
+		updateUrlParameters(source_currency, source_val);
+		};
+
+
+
+		$currency_inputs.keyup(function(e) {
+		var inputValue = $(this).val();
+		var source_currency = $(this).data("currency");
+		
+		// Check if this is a math expression
+		if (/[\+\-\*\/\(\)]/.test(inputValue.replace(/[, ]/g, ''))) {
+			// Parse math expression
+			var calculatedValue = parseMathExpression(inputValue);
+			
+			if (calculatedValue !== null) {
+				// Use calculated value for conversion
+				var source_val = parseFloat(calculatedValue).toFixed(8);
+				
+				$(this).addClass("active");
+				calcConversion( source_val, source_currency, false );
+				writenNumber(european);
+				
+				// URL parameters are now updated in calcConversion
+			}
+		} else {
+			// Parse regular number input
+			var source_val = unformatNumber(inputValue);
+			source_val = parseFloat(source_val).toFixed(8);
+
+			$(this).addClass("active");
+			calcConversion( source_val, source_currency, false );
+
+			writenNumber(european);
+
+			// URL parameters are now updated in calcConversion
+		}
+
+		});
+
+
+
+
+
+
+		writenNumber(european);
+		$currency_inputs.blur(function() {
+			$(this).removeClass("active");
+		});
+
+	// Manual test function for debugging
+	window.testDatePicker = function(dateString) {
+		console.log('=== Manual test of custom date picker ===');
+		console.log('Testing with date string:', dateString);
+		var testDate = new Date(dateString);
+		if (!isNaN(testDate.getTime())) {
+			console.log('Valid date created:', testDate);
+			handleDateChange(testDate);
+		} else {
+			console.error('Invalid date string:', dateString);
+		}
+	};
+	
+	window.testHistoricalPrices = function(timestamp) {
+		console.log('=== Manual test of historical prices ===');
+		console.log('Testing with timestamp:', timestamp);
+		fetchHistoricalPrices(timestamp);
+	};
+	
+	window.showCurrentRates = function() {
+		console.log('=== Current RateToBTC ===');
+		console.log(RateToBTC);
+	};
+	
+	window.showCustomDatePicker = function() {
+		console.log('=== Manually showing simplified date picker ===');
+		var currentDate = new Date();
+		var urlParams = new URLSearchParams(window.location.search);
+		var timestamp = urlParams.get('timestamp');
+		if (timestamp) {
+			currentDate = new Date(parseInt(timestamp) * 1000);
+		}
+		showCustomDatePicker(currentDate);
+	};
+	
+	window.debugDatepicker = function() {
+		console.log('=== Simplified Date Picker Debug Info ===');
+		console.log('Date picker button element:', document.getElementById('date-picker-button'));
+		console.log('Current URL timestamp:', new URLSearchParams(window.location.search).get('timestamp'));
+		console.log('Current RateToBTC:', RateToBTC);
+	};
+	
+	console.log('=== Script loaded successfully ===');
+	console.log('Available test functions:');
+	console.log('- testDatePicker("2023-12-15") - Test with a specific date');
+	console.log('- testHistoricalPrices(1702684800) - Test with a specific timestamp');
+	console.log('- showCurrentRates() - Show current exchange rates');
+	console.log('- showCustomDatePicker() - Manually show the simplified date picker');
+	console.log('- debugDatepicker() - Show debug info about the simplified date picker');
+
+})
