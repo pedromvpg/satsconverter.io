@@ -1349,7 +1349,7 @@ $( document ).ready(function() {
 			if(source_currency == "sat"){
 			isProgrammaticUpdate = true;
 			var newBtcValue = parseFloat(source_val / RateToBTC[source_currency]).toFixed(8);
-			$btc_input.val(newBtcValue);
+			$btc_input.val(formatNumber(newBtcValue, 'btc'));
 			isProgrammaticUpdate = false;
 			}
 			else if(source_currency == "btc"){
@@ -1358,7 +1358,7 @@ $( document ).ready(function() {
 			else{
 			isProgrammaticUpdate = true;
 			var newBtcValue = parseFloat( parseFloat(source_val) / parseFloat(RateToBTC[source_currency]) ).toFixed(8);
-			$btc_input.val(newBtcValue);
+			$btc_input.val(formatNumber(newBtcValue, 'btc'));
 			isProgrammaticUpdate = false;
 			}
 
@@ -1375,7 +1375,7 @@ $( document ).ready(function() {
 				
 				// Update the BTC input with the calculated value
 				isProgrammaticUpdate = true;
-				$btc_input.val(btc_input_value);
+				$btc_input.val(formatNumber(btc_input_value, 'btc'));
 				isProgrammaticUpdate = false;
 			}
 
