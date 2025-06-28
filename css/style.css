@@ -805,6 +805,17 @@ explicitly, e.g.
   color: #444;
 }
 
+/* Font size reduction for long fiat values */
+.fiat .value-input.font-size-reduced {
+  font-size: 99% !important; /* Reduce by 10% from base 110% */
+  transition: font-size 0.2s ease;
+}
+
+.fiat .value-input.font-size-reduced.font-size-reduced-more {
+  font-size: 79% !important; /* Additional 20% reduction (99% * 0.8 = 79.2%) */
+  transition: font-size 0.2s ease;
+}
+
 /* Loading state for currency fields */
 .field.fiat.loading {
   opacity: 0.7;

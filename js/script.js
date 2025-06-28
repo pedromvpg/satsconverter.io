@@ -856,6 +856,8 @@ $( document ).ready(function() {
 				console.log('Restoring anchor:', anchorCurrency, anchorAmount);
 				restoreAnchorCurrency(anchorCurrency, anchorAmount);
 				
+				// Adjust fiat input sizes after anchor restoration
+				adjustFiatInputSizes();
 			} else {
 				console.error('Invalid historical data structure:', data);
 				// Fallback to current prices
@@ -904,6 +906,9 @@ $( document ).ready(function() {
 			// Update URL parameters to reflect the anchor
 			updateUrlParameters(anchorCurrency, anchorAmount);
 			console.log('Updated URL parameters');
+			
+			// Adjust fiat input sizes after anchor restoration
+			adjustFiatInputSizes();
 		} else {
 			console.error('Anchor input not found:', anchorCurrency);
 		}
@@ -1091,6 +1096,24 @@ $( document ).ready(function() {
 		return str;
 	}
 
+	// Function to check and adjust fiat input font sizes based on content length
+	function adjustFiatInputSizes() {
+		$(".fiat .value-input").each(function() {
+			var $input = $(this);
+			var value = $input.val();
+			
+			// Remove existing size adjustment classes
+			$input.removeClass('font-size-reduced font-size-reduced-more');
+			
+			// Check if value length exceeds thresholds
+			if (value && value.length > 20) {
+				$input.addClass('font-size-reduced font-size-reduced-more');
+			} else if (value && value.length > 14) {
+				$input.addClass('font-size-reduced');
+			}
+		});
+	}
+
 	// Apply initial formatting to all inputs
 	$(".value-input").each(function() {
 		var $input = $(this);
@@ -1103,6 +1126,9 @@ $( document ).ready(function() {
 			isProgrammaticUpdate = false;
 		}
 	});
+
+	// Check fiat input sizes after initial formatting
+	adjustFiatInputSizes();
 
 	// Handle input without real-time formatting
 	$(".value-input").on('input', function(e) {
@@ -1527,6 +1553,9 @@ $( document ).ready(function() {
 				(( RateToBTC['sat'] * btc_input_value ) == 1) ? $("#sats-label").text('⚪️ sat') : $("#sats-label").text('⚪️ sats');
 			})
 
+		// Adjust fiat input sizes after all values are updated
+		adjustFiatInputSizes();
+
 		console.log('=== calcConversion complete ===');
 		
 		// Update URL parameters with the source currency and value
@@ -1789,6 +1818,9 @@ $( document ).ready(function() {
 		// Remove any n-a-value classes
 		$('.field.fiat').removeClass('n-a-value loading');
 		
+		// Reset currency order to default
+		resetCurrencyOrder();
+		
 		// Reset to current prices (today)
 		updateButtonText(new Date());
 		
@@ -1802,6 +1834,29 @@ $( document ).ready(function() {
 		}, 100);
 		
 		console.log('=== resetToDefaults complete ===');
+	}
+
+	// Function to reset currency order to default
+	function resetCurrencyOrder() {
+		console.log('=== resetCurrencyOrder called ===');
+		
+		// Default order of currencies (as they appear in the HTML)
+		var defaultOrder = [
+			'usd', 'eur', 'gbp', 'cny', 'jpy', 'cad', 'rub', 'chf', 'brl', 'aed', 
+			'try', 'aud', 'mxn', 'ils', 'zar', 'thb', 'inr', 'sek', 'sar', 'ars'
+		];
+		
+		var container = $('#fiat-container');
+		
+		// Reorder elements to match default order
+		defaultOrder.forEach(function(currency) {
+			var element = $('#input_' + currency).closest('.field.fiat');
+			if (element.length) {
+				container.append(element);
+			}
+		});
+		
+		console.log('Currency order reset to default');
 	}
 
 })
