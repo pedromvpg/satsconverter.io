@@ -934,8 +934,13 @@ $( document ).ready(function() {
 			
 			return btcValue;
 		} else {
-			// Fiat: 2 decimal places with commas
-			return (cleanValue || 0).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+			// Fiat: 2 decimal places with commas, but trim trailing zeros
+			var fiatValue = (cleanValue || 0).toFixed(2);
+			// Remove trailing zeros and decimal point if all zeros
+			fiatValue = fiatValue.replace(/0+$/, ''); // Remove trailing zeros
+			fiatValue = fiatValue.replace(/\.$/, ''); // Remove trailing decimal point
+			// Add comma separators
+			return fiatValue.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
 		}
 	}
 
