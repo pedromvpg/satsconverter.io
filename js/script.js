@@ -6,11 +6,11 @@ $( document ).ready(function() {
 		btc: 1
 	};
 
-	function writenNumber(european){
+function writenNumber(european){
 		// Check if written numbers checkbox is checked
 		var writtenNumbersEnabled = $('#written-number-check').is(':checked');
 		
-		$(".writen-number").each(function() {
+	$(".writen-number").each(function() {
 				var value = $(this).siblings(".value-input").val();
 				
 				// Handle empty or invalid values
@@ -30,84 +30,107 @@ $( document ).ready(function() {
 				
 				// Only populate text if written numbers are enabled
 				if (writtenNumbersEnabled) {
-					$(this).text(formatLargeNumber(source_val, european));
+			$(this).text(formatLargeNumber(source_val, european));
 				} else {
 					$(this).text('');
 				}
-		});
-	}
+	});
+}
 
-	function formatLargeNumber(num, isEuropean = false) {
-		num = Number(num);
-		if (isNaN(num)) {
-			return 'Input must be a valid number';
-		}
+function formatLargeNumber(num, isEuropean = false) {
+    num = Number(num);
+    if (isNaN(num)) {
+        return 'Input must be a valid number';
+    }
 
-		// https://en.wikipedia.org/wiki/Long_and_short_scales
-		const thresholds = isEuropean
-			? [
-				{ value: 1e21, word: 'trilliard' },
-				{ value: 1e18, word: 'trillion' },       // European trillion
-				{ value: 1e15, word: 'billiard' },
-				{ value: 1e12, word: 'billion' },        // European billion
-				{ value: 1e9, word: 'milliard' },
-				{ value: 1e6, word: 'million' },
-				{ value: 1e3, word: 'thousand' }
-			]
-			: [
-				{ value: 1e18, word: 'sextillion' },
-				{ value: 1e18, word: 'quintillion' },
-				{ value: 1e15, word: 'quadrillion' },
-				{ value: 1e12, word: 'trillion' },       // Standard trillion
-				{ value: 1e9, word: 'billion' },         // Standard billion
-				{ value: 1e6, word: 'million' },
-				{ value: 1e3, word: 'thousand' }
-			];
+    // https://en.wikipedia.org/wiki/Long_and_short_scales
+    const thresholds = isEuropean
+        ? [
+            { value: 1e21, word: 'trilliard' },
+						{ value: 1e18, word: 'trillion' },       // European trillion
+            { value: 1e15, word: 'billiard' },
+            { value: 1e12, word: 'billion' },        // European billion
+            { value: 1e9, word: 'milliard' },
+            { value: 1e6, word: 'million' },
+            { value: 1e3, word: 'thousand' }
+        ]
+        : [
+            { value: 1e18, word: 'sextillion' },
+						{ value: 1e18, word: 'quintillion' },
+            { value: 1e15, word: 'quadrillion' },
+            { value: 1e12, word: 'trillion' },       // Standard trillion
+            { value: 1e9, word: 'billion' },         // Standard billion
+            { value: 1e6, word: 'million' },
+            { value: 1e3, word: 'thousand' }
+        ];
 
-		const isNegative = num < 0;
-		num = Math.abs(num);
+    const isNegative = num < 0;
+    num = Math.abs(num);
 
-		for (const { value, word } of thresholds) {
-			if (num >= value) {
-				const rounded = Math.round(num / value);
-				const symbol = (num !== rounded * value) ? '~' : ''; // Show '~' if num is not equal to rounded * value
-				return `${isNegative ? '-' : ''}${symbol}${rounded} ${word}${rounded > 1 ? 's' : ''}`;
-			}
-		}
-		return `${isNegative ? '-' : ''}${num}`;
-	}
+    for (const { value, word } of thresholds) {
+        if (num >= value) {
+            const rounded = Math.round(num / value);
+            const symbol = (num !== rounded * value) ? '~' : ''; // Show '~' if num is not equal to rounded * value
+            return `${isNegative ? '-' : ''}${symbol}${rounded} ${word}${rounded > 1 ? 's' : ''}`;
+        }
+    }
+    return `${isNegative ? '-' : ''}${num}`;
+}
 
 	// Math Expression Parser
 	function parseMathExpression(input) {
+		console.log('=== parseMathExpression called ===');
+		console.log('Input:', input);
+		
 		// Remove commas and extra spaces
 		input = input.replace(/[, ]/g, '');
+		console.log('Cleaned input:', input);
 		
 		// Check if input contains math operators
 		if (/[\+\-\*\/]/.test(input)) {
+			console.log('Math operators detected');
 			try {
 				// Validate the expression - only allow numbers and basic operators
 				if (/^[\d\+\-\*\/\.\(\)]+$/.test(input)) {
-					// Check for division by zero
-					if (input.includes('/0') && !input.includes('/0.')) {
-						return null; // Division by zero
+					console.log('Expression format is valid');
+					// Check that the expression ends with a number, not an operator
+					if (!/[\+\-\*\/]$/.test(input)) {
+						console.log('Expression ends with number, evaluating');
+						// Check for division by zero
+						if (input.includes('/0') && !input.includes('/0.')) {
+							console.log('Division by zero detected, returning null');
+							return null; // Division by zero
+						}
+						
+						// Evaluate the expression
+						var result = eval(input);
+						console.log('Eval result:', result);
+						
+						// Check if result is valid number
+						if (isFinite(result) && !isNaN(result)) {
+							console.log('Valid result returned:', result);
+							return result;
+						} else {
+							console.log('Invalid result (not finite or NaN):', result);
+						}
+					} else {
+						console.log('Expression ends with operator, not evaluating');
 					}
-					
-					// Evaluate the expression
-					var result = eval(input);
-					
-					// Check if result is valid number
-					if (isFinite(result) && !isNaN(result)) {
-						return result;
-					}
+				} else {
+					console.log('Expression format is invalid');
 				}
 			} catch (e) {
+				console.log('Exception during evaluation:', e);
 				// Invalid expression, return null
 				return null;
 			}
+		} else {
+			console.log('No math operators detected');
 		}
 		
 		// No math expression or invalid, return original input
 		var parsed = parseFloat(input.replace(/[, ]/g, ''));
+		console.log('Fallback parsed value:', parsed);
 		return isNaN(parsed) ? 0 : parsed;
 	}
 
@@ -210,7 +233,7 @@ $( document ).ready(function() {
 		}
 		
 		// Update button text
-		updateButtonText(initialDate);
+				updateButtonText(initialDate);
 		
 		// Add click handler to the button
 		pickerButton.addEventListener('click', function(e) {
@@ -647,7 +670,7 @@ $( document ).ready(function() {
 			}
 		});
 	}
-
+	
 	function updateButtonText(date) {
 		var pickerButton = document.getElementById('date-picker-button');
 		if (pickerButton) {
@@ -768,7 +791,7 @@ $( document ).ready(function() {
 				fetchCurrentPrices();
 			}
 		}).fail(function(xhr, status, error) {
-			// Fallback to current prices		
+			// Fallback to current prices
 			fetchCurrentPrices();
 		});
 	}
@@ -788,10 +811,10 @@ $( document ).ready(function() {
 			
 			// Recalculate all conversions based on this anchor
 			calcConversion(anchorAmount, anchorCurrency, false);
-			
-			// Update written numbers
-			writenNumber(european);
-			
+		
+		// Update written numbers
+		writenNumber(european);
+		
 			// Update URL parameters to reflect the anchor
 			updateUrlParameters(anchorCurrency, anchorAmount);
 			
@@ -843,7 +866,7 @@ $( document ).ready(function() {
 			// Load URL parameters after prices are available (only if not in historical mode and not skipped)
 			var urlParams = new URLSearchParams(window.location.search);
 			if (!urlParams.get('timestamp') && !skipUrlParams) {
-				loadUrlParameters();
+			loadUrlParameters();
 			} else {
 			}
 			
@@ -909,19 +932,35 @@ $( document ).ready(function() {
 	// Custom formatting system to replace Inputmask
 	var isProgrammaticUpdate = false; // Flag to prevent input handler interference
 	
-	function formatNumber(value, currency) {
+	function formatNumber(value, currency, preserveDecimal = false) {
+		console.log('=== formatNumber called ===');
+		console.log('Value:', value);
+		console.log('Currency:', currency);
+		console.log('Preserve decimal:', preserveDecimal);
+		
 		// First, clean the value by removing commas to get the actual number
 		var cleanValue = unformatNumber(value);
+		console.log('Clean value:', cleanValue);
 		
 		if (currency === "sat") {
 			// Satoshis: whole numbers with commas
-			return Math.round(cleanValue || 0).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+			var result = Math.round(cleanValue || 0).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+			console.log('SAT result:', result);
+			return result;
 		} else if (currency === "btc") {
+			console.log('Formatting BTC value');
 			// Bitcoin: up to 8 decimal places, but trim trailing zeros
 			var btcValue = (cleanValue || 0).toFixed(8);
-			// Remove trailing zeros and decimal point if all zeros
+			console.log('BTC after toFixed(8):', btcValue);
+			// Remove trailing zeros
 			btcValue = btcValue.replace(/0+$/, ''); // Remove trailing zeros
-			btcValue = btcValue.replace(/\.$/, ''); // Remove trailing decimal point
+			console.log('BTC after removing trailing zeros:', btcValue);
+			
+			// Only remove trailing decimal point if not preserving decimal
+			if (!preserveDecimal) {
+				btcValue = btcValue.replace(/\.$/, ''); // Remove trailing decimal point
+				console.log('BTC after removing trailing decimal:', btcValue);
+			}
 			
 			// Add comma separators to the whole number part
 			if (btcValue.includes('.')) {
@@ -931,16 +970,27 @@ $( document ).ready(function() {
 			} else {
 				btcValue = btcValue.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
 			}
-			
+			console.log('BTC final result:', btcValue);
 			return btcValue;
 		} else {
+			console.log('Formatting fiat value');
 			// Fiat: 2 decimal places with commas, but trim trailing zeros
 			var fiatValue = (cleanValue || 0).toFixed(2);
-			// Remove trailing zeros and decimal point if all zeros
+			console.log('Fiat after toFixed(2):', fiatValue);
+			// Remove trailing zeros
 			fiatValue = fiatValue.replace(/0+$/, ''); // Remove trailing zeros
-			fiatValue = fiatValue.replace(/\.$/, ''); // Remove trailing decimal point
+			console.log('Fiat after removing trailing zeros:', fiatValue);
+			
+			// Only remove trailing decimal point if not preserving decimal
+			if (!preserveDecimal) {
+				fiatValue = fiatValue.replace(/\.$/, ''); // Remove trailing decimal point
+				console.log('Fiat after removing trailing decimal:', fiatValue);
+			}
+			
 			// Add comma separators
-			return fiatValue.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+			var result = fiatValue.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+			console.log('Fiat final result:', result);
+			return result;
 		}
 	}
 
@@ -967,10 +1017,10 @@ $( document ).ready(function() {
 			str = '0' + str;
 		}
 		
-		// Remove trailing zeros after decimal point
+		// Remove trailing zeros after decimal point, but preserve the decimal point
 		if (str.includes('.')) {
 			str = str.replace(/0+$/, ''); // Remove trailing zeros
-			str = str.replace(/\.$/, ''); // Remove trailing decimal point
+			// Don't remove the decimal point - this allows users to type fractions
 		}
 		
 		// Restore negative sign
@@ -1044,10 +1094,10 @@ $( document ).ready(function() {
 			// Handle multiple commas - remove all but keep structure
 			cleanValue = cleanValue.replace(/,/g, '');
 			
-			// Trim leading and trailing zeros
-			cleanValue = trimZeros(cleanValue);
+			// Don't trim zeros during typing - only validate format
+			// This allows users to type "0." and continue typing
 			
-			// Update value if it changed
+			// Update value if it changed (only for format validation)
 			if (cleanValue !== value) {
 				var cursorPos = $input[0].selectionStart;
 				var valueBeforeCursor = value.substring(0, cursorPos);
@@ -1104,11 +1154,13 @@ $( document ).ready(function() {
 
 	// Handle Enter key to compute and blur
 	$(".value-input").on('keydown', function(e) {
+
 		if (e.keyCode === 13) { // Enter key
 			e.preventDefault();
 			var $input = $(this);
 			var value = $input.val();
 			var currency = $input.data("currency");
+			console.log('Enter key pressed for currency:', currency, 'value:', value);
 			
 			// Check if this is a math expression
 			if (/[\+\-\*\/\(\)]/.test(value)) {
@@ -1146,11 +1198,16 @@ $( document ).ready(function() {
 
 	// Handle blur event to format numbers
 	$(".value-input").on('blur', function(e) {
-		if (isProgrammaticUpdate) return; // Skip if this is a programmatic update
+
+		if (isProgrammaticUpdate) {
+			console.log('Blur event skipped due to programmatic update');
+			return; // Skip if this is a programmatic update
+		}
 		
 		var $input = $(this);
 		var value = $input.val();
 		var currency = $input.data("currency");
+		console.log('Blur event processing for currency:', currency, 'value:', value);
 		
 		// Check if this is a math expression
 		if (/[\+\-\*\/\(\)]/.test(value)) {
@@ -1336,9 +1393,15 @@ $( document ).ready(function() {
 		window.history.pushState({}, '', url);
 	}
 
-		function calcConversion(source_val, source_currency, firstLoad){
+		function calcConversion(source_val, source_currency, firstLoad, preserveDecimal = false){
+		console.log('=== calcConversion called ===');
+		console.log('Source value:', source_val);
+		console.log('Source currency:', source_currency);
+		console.log('First load:', firstLoad);
+		console.log('Preserve decimal:', preserveDecimal);
 		
 			var	btc_input_value = parseFloat($btc_input.val().replace(/,/g, '')).toFixed(8);
+		console.log('Initial BTC input value:', btc_input_value);
 
 			//set BTC max if user is editing BTC input
 			if( btc_input_value > btc_max_stock ){
@@ -1352,18 +1415,39 @@ $( document ).ready(function() {
 			// Get convertion to BTC from the current currency
 
 			if(source_currency == "sat"){
+			console.log('Converting from SAT');
 			isProgrammaticUpdate = true;
 			var newBtcValue = parseFloat(source_val / RateToBTC[source_currency]).toFixed(8);
-			$btc_input.val(formatNumber(newBtcValue, 'btc'));
+			console.log('New BTC value (sat):', newBtcValue);
+			$btc_input.val(formatNumber(newBtcValue, 'btc', preserveDecimal));
 			isProgrammaticUpdate = false;
 			}
 			else if(source_currency == "btc"){
-				btc_input_value = btc_input_value;
+			console.log('Converting from BTC');
+			console.log('Source value received:', source_val);
+
+				// Update the BTC input with the calculated value from math expression
+				btc_input_value = parseFloat(source_val).toFixed(8);
+				console.log('Updated btc_input_value:', btc_input_value);
+				
+				// Format and update the BTC input field
+				isProgrammaticUpdate = true;
+				var formattedBtcValue = formatNumber(btc_input_value, 'btc', preserveDecimal);
+				console.log('Formatted BTC value:', formattedBtcValue);
+				$btc_input.val(formattedBtcValue);
+				
+				// Reset the flag after a short delay to ensure all events complete
+				setTimeout(function() {
+					isProgrammaticUpdate = false;
+					console.log('BTC input updated, isProgrammaticUpdate set to false');
+				}, 50);
 			}
 			else{
+			console.log('Converting from fiat:', source_currency);
 			isProgrammaticUpdate = true;
 			var newBtcValue = parseFloat( parseFloat(source_val) / parseFloat(RateToBTC[source_currency]) ).toFixed(8);
-			$btc_input.val(formatNumber(newBtcValue, 'btc'));
+			console.log('New BTC value (fiat):', newBtcValue);
+			$btc_input.val(formatNumber(newBtcValue, 'btc', preserveDecimal));
 			isProgrammaticUpdate = false;
 			}
 
@@ -1380,15 +1464,15 @@ $( document ).ready(function() {
 				
 				// Update the BTC input with the calculated value
 				isProgrammaticUpdate = true;
-				$btc_input.val(formatNumber(btc_input_value, 'btc'));
+				$btc_input.val(formatNumber(btc_input_value, 'btc', preserveDecimal));
 				isProgrammaticUpdate = false;
 			}
 
 			// Updates BTC value
 			btc_input_value = parseFloat($btc_input.val().replace(/,/g, '')).toFixed(8);
-		
-		// Updates all inputs depending on its rate to BTC
-			$(".value-input:not('.active, .bitcoin')").each(function(){
+
+			// Updates all inputs depending on its rate to BTC
+			$(".value-input:not('.active')").each(function(){
 				currency = $(this).data("currency");
 			
 			// Check if currency is available (not 'n/a')
@@ -1407,7 +1491,7 @@ $( document ).ready(function() {
 			isProgrammaticUpdate = true;
 			// Format the value properly based on currency type using the formatNumber function
 			var formattedValue = formatNumber(calculatedValue, currency);
-			$(this).val(formattedValue);
+				$(this).val(formattedValue);
 			isProgrammaticUpdate = false;
 			
 				(( RateToBTC['sat'] * btc_input_value ) == 1) ? $("#sats-label").text('⚪️ sat') : $("#sats-label").text('⚪️ sats');
@@ -1423,36 +1507,63 @@ $( document ).ready(function() {
 
 
 		$currency_inputs.keyup(function(e) {
+		// Skip if this is a programmatic update or if it's the Enter key
+		if (isProgrammaticUpdate || e.keyCode === 13) {
+			return;
+		}
+		
 		var inputValue = $(this).val();
 		var source_currency = $(this).data("currency");
 		
+		console.log('=== KEYUP EVENT ===');
+		console.log('Input value:', inputValue);
+		console.log('Source currency:', source_currency);
+		console.log('Is programmatic update:', isProgrammaticUpdate);
+		console.log('Input element:', this);
+
+		// Check if user is actively typing a decimal (preserve decimal point)
+		var preserveDecimal = inputValue.endsWith('.');
+		
 		// Check if this is a math expression
 		if (/[\+\-\*\/\(\)]/.test(inputValue.replace(/[, ]/g, ''))) {
+			console.log('Math expression detected');
+			
 			// Parse math expression
 			var calculatedValue = parseMathExpression(inputValue);
+			console.log('Parsed math result:', calculatedValue);
 			
 			if (calculatedValue !== null) {
+				console.log('Math expression is valid, calculating conversion');
 				// Use calculated value for conversion
 				var source_val = parseFloat(calculatedValue).toFixed(8);
+				console.log('Source value for conversion:', source_val);
 				
 				$(this).addClass("active");
-				calcConversion( source_val, source_currency, false );
+				calcConversion( source_val, source_currency, false, preserveDecimal );
 				writenNumber(european);
 				
 				// URL parameters are now updated in calcConversion
+			} else {
+				console.log('Math expression is invalid or incomplete');
+				// Don't trigger conversion for incomplete math expressions
+				// Just add active class for visual feedback
+				$(this).addClass("active");
 			}
 		} else {
+			console.log('Regular number input detected');
 			// Parse regular number input
 			var source_val = unformatNumber(inputValue);
 			source_val = parseFloat(source_val).toFixed(8);
+			console.log('Unformatted source value:', source_val);
 
 			$(this).addClass("active");
-			calcConversion( source_val, source_currency, false );
+			calcConversion( source_val, source_currency, false, preserveDecimal );
 
 			writenNumber(european);
 
 			// URL parameters are now updated in calcConversion
 		}
+		console.log('=== KEYUP EVENT END ===');
 
 		});
 
