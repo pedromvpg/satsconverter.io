@@ -1073,17 +1073,28 @@ function formatLargeNumber(num, isEuropean = false) {
 		var value = $input.val();
 		var currency = $input.data("currency");
 		
+		console.log('=== INPUT EVENT ===');
+		console.log('Input value:', value);
+		console.log('Currency:', currency);
+		console.log('Is programmatic update:', isProgrammaticUpdate);
+		
 		// Check if this is a math expression
 		if (/[\+\-\*\/\(\)]/.test(value)) {
+			console.log('Math expression detected in input event');
 			// Math mode - don't format, just add visual feedback
 			$input.addClass('math-mode');
 			$input.removeClass('math-calculating');
+			// Don't validate or clean math expressions - let them be typed freely
+			console.log('Returning early from input event for math expression');
+			return;
 		} else {
+			console.log('Regular number input detected');
 			// Normal mode - remove math mode but don't format yet
 			$input.removeClass('math-mode');
 			
 			// Validate input - only allow numbers, decimals, and commas
 			var cleanValue = value.replace(/[^\d.,]/g, '');
+			console.log('Clean value after validation:', cleanValue);
 			
 			// Handle multiple decimal points - keep only the first one
 			var parts = cleanValue.split('.');
@@ -1099,6 +1110,7 @@ function formatLargeNumber(num, isEuropean = false) {
 			
 			// Update value if it changed (only for format validation)
 			if (cleanValue !== value) {
+				console.log('Value changed during validation, updating');
 				var cursorPos = $input[0].selectionStart;
 				var valueBeforeCursor = value.substring(0, cursorPos);
 				var commasBeforeCursor = (valueBeforeCursor.match(/,/g) || []).length;
@@ -1127,6 +1139,7 @@ function formatLargeNumber(num, isEuropean = false) {
 				$input.addClass('math-mode');
 			}
 		}
+		console.log('=== INPUT EVENT END ===');
 	});
 
 	// Handle paste events for math operators
@@ -1311,6 +1324,17 @@ function formatLargeNumber(num, isEuropean = false) {
 			return; // Exit early if sats parameter found
 		}
 		
+		// Check for BTC parameter
+		if (urlParams.get('btc')) {
+			var loadedCurrency = 'btc';
+			var loadedValue = urlParams.get('btc');
+			
+			$('#input_' + loadedCurrency).val(loadedValue);
+			calcConversion(parseFloat(loadedValue), loadedCurrency, false);
+			writenNumber(european);
+			return; // Exit early if btc parameter found
+		}
+		
 		// Check for other currency parameters
 		var currencyCodes = [
 			"usd", "eur", "gbp", "cny", "jpy", "cad",
@@ -1332,9 +1356,9 @@ function formatLargeNumber(num, isEuropean = false) {
 			}
 		}
 		
-		// Set default value of 0 sats when no parameters are found
-		$('#input_sat').val('0');
-		calcConversion(0, 'sat', false);
+		// Set default value of 1 sat when no parameters are found
+		$('#input_sat').val('1');
+		calcConversion(1, 'sat', false);
 		writenNumber(european);
 	}
 
@@ -1496,6 +1520,15 @@ function formatLargeNumber(num, isEuropean = false) {
 			
 				(( RateToBTC['sat'] * btc_input_value ) == 1) ? $("#sats-label").text('⚪️ sat') : $("#sats-label").text('⚪️ sats');
 			})
+			
+			// Special handling for BTC input when it's the source currency
+			if (source_currency === 'btc') {
+				// Update the BTC input with the formatted value
+				isProgrammaticUpdate = true;
+				var formattedBtcValue = formatNumber(source_val, 'btc', preserveDecimal);
+				$btc_input.val(formattedBtcValue);
+				isProgrammaticUpdate = false;
+			}
 
 		// Adjust fiat input sizes after all values are updated
 		adjustFiatInputSizes();
@@ -1509,6 +1542,7 @@ function formatLargeNumber(num, isEuropean = false) {
 		$currency_inputs.keyup(function(e) {
 		// Skip if this is a programmatic update or if it's the Enter key
 		if (isProgrammaticUpdate || e.keyCode === 13) {
+			console.log('KEYUP: Skipping due to programmatic update or Enter key');
 			return;
 		}
 		
@@ -1520,49 +1554,51 @@ function formatLargeNumber(num, isEuropean = false) {
 		console.log('Source currency:', source_currency);
 		console.log('Is programmatic update:', isProgrammaticUpdate);
 		console.log('Input element:', this);
+		console.log('Key pressed:', e.key);
+
+		// Check if this is a math expression
+		if (/[\+\-\*\/\(\)]/.test(inputValue.replace(/[, ]/g, ''))) {
+			console.log('Math expression detected');
+			$(this).addClass("active");
+			
+			// Only process complete math expressions (not while typing)
+			// Check if the expression ends with a number, not an operator
+			if (!/[\+\-\*\/\(\)]$/.test(inputValue.replace(/[, ]/g, ''))) {
+				console.log('Complete math expression detected, calculating');
+				// Parse math expression
+				var calculatedValue = parseMathExpression(inputValue);
+				console.log('Parsed math result:', calculatedValue);
+				
+				if (calculatedValue !== null) {
+					console.log('Math expression is valid, calculating conversion');
+					// Use calculated value for conversion
+					var source_val = parseFloat(calculatedValue).toFixed(8);
+					console.log('Source value for conversion:', source_val);
+					
+					calcConversion( source_val, source_currency, false, false );
+					writenNumber(european);
+				}
+			} else {
+				console.log('Incomplete math expression, skipping conversion');
+			}
+			return; // Skip regular processing for math expressions
+		}
 
 		// Check if user is actively typing a decimal (preserve decimal point)
 		var preserveDecimal = inputValue.endsWith('.');
 		
-		// Check if this is a math expression
-		if (/[\+\-\*\/\(\)]/.test(inputValue.replace(/[, ]/g, ''))) {
-			console.log('Math expression detected');
-			
-			// Parse math expression
-			var calculatedValue = parseMathExpression(inputValue);
-			console.log('Parsed math result:', calculatedValue);
-			
-			if (calculatedValue !== null) {
-				console.log('Math expression is valid, calculating conversion');
-				// Use calculated value for conversion
-				var source_val = parseFloat(calculatedValue).toFixed(8);
-				console.log('Source value for conversion:', source_val);
-				
-				$(this).addClass("active");
-				calcConversion( source_val, source_currency, false, preserveDecimal );
-				writenNumber(european);
-				
-				// URL parameters are now updated in calcConversion
-			} else {
-				console.log('Math expression is invalid or incomplete');
-				// Don't trigger conversion for incomplete math expressions
-				// Just add active class for visual feedback
-				$(this).addClass("active");
-			}
-		} else {
-			console.log('Regular number input detected');
-			// Parse regular number input
-			var source_val = unformatNumber(inputValue);
-			source_val = parseFloat(source_val).toFixed(8);
-			console.log('Unformatted source value:', source_val);
+		console.log('Regular number input detected');
+		// Parse regular number input
+		var source_val = unformatNumber(inputValue);
+		source_val = parseFloat(source_val).toFixed(8);
+		console.log('Unformatted source value:', source_val);
 
-			$(this).addClass("active");
-			calcConversion( source_val, source_currency, false, preserveDecimal );
+		$(this).addClass("active");
+		calcConversion( source_val, source_currency, false, preserveDecimal );
 
-			writenNumber(european);
+		writenNumber(european);
 
-			// URL parameters are now updated in calcConversion
-		}
+		// URL parameters are now updated in calcConversion
 		console.log('=== KEYUP EVENT END ===');
 
 		});
