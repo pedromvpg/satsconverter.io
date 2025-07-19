@@ -1674,11 +1674,14 @@ function formatLargeNumber(num, isEuropean = false) {
 		// Fetch current prices and set default values (skip URL parameters)
 		fetchCurrentPrices(true);
 		
-		// Set default value of 1 sat
+		// Set default value of 1 sat after prices are loaded
 		setTimeout(function() {
+			// Set the sats input value directly
+			$('#input_sat').val('1');
+			// Calculate conversions based on 1 sat
 			calcConversion(1, 'sat', false);
 			writenNumber(false);
-		}, 100);
+		}, 200);
 		
 	}
 
