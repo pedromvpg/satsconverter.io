@@ -1650,9 +1650,9 @@ function formatLargeNumber(num, isEuropean = false) {
 	// Function to reset the page to defaults
 	function resetToDefaults() {
 		
-		// Clear all URL parameters
+		// Set URL to default sats=1
 		var url = new URL(window.location.href);
-		url.search = '';
+		url.search = 'sats=1';
 		window.history.replaceState({}, '', url);
 		
 		// Reset checkboxes to unchecked
@@ -1661,18 +1661,6 @@ function formatLargeNumber(num, isEuropean = false) {
 		
 		// Clear written numbers
 		$(".writen-number").text('').animate({opacity: 0}, 100).animate({fontSize: '0px'}, 100);
-		
-		// Reset to default values
-		$('#input_sat').val('0');
-		$('#input_btc').val('0.00000001');
-		
-		// Clear all fiat inputs
-		$(".value-input[data-currency]").each(function() {
-			var currency = $(this).data("currency");
-			if (currency !== 'sat' && currency !== 'btc') {
-				$(this).val('');
-			}
-		});
 		
 		// Remove any n-a-value classes
 		$('.field.fiat').removeClass('n-a-value loading');
@@ -1686,9 +1674,9 @@ function formatLargeNumber(num, isEuropean = false) {
 		// Fetch current prices and set default values (skip URL parameters)
 		fetchCurrentPrices(true);
 		
-		// Set default value of 0 sats
+		// Set default value of 1 sat
 		setTimeout(function() {
-			calcConversion(0, 'sat', false);
+			calcConversion(1, 'sat', false);
 			writenNumber(false);
 		}, 100);
 		
