@@ -1073,28 +1073,19 @@ function formatLargeNumber(num, isEuropean = false) {
 		var value = $input.val();
 		var currency = $input.data("currency");
 		
-		console.log('=== INPUT EVENT ===');
-		console.log('Input value:', value);
-		console.log('Currency:', currency);
-		console.log('Is programmatic update:', isProgrammaticUpdate);
-		
 		// Check if this is a math expression
 		if (/[\+\-\*\/\(\)]/.test(value)) {
-			console.log('Math expression detected in input event');
 			// Math mode - don't format, just add visual feedback
 			$input.addClass('math-mode');
 			$input.removeClass('math-calculating');
 			// Don't validate or clean math expressions - let them be typed freely
-			console.log('Returning early from input event for math expression');
 			return;
 		} else {
-			console.log('Regular number input detected');
 			// Normal mode - remove math mode but don't format yet
 			$input.removeClass('math-mode');
 			
 			// Validate input - only allow numbers, decimals, and commas
 			var cleanValue = value.replace(/[^\d.,]/g, '');
-			console.log('Clean value after validation:', cleanValue);
 			
 			// Handle multiple decimal points - keep only the first one
 			var parts = cleanValue.split('.');
@@ -1110,7 +1101,6 @@ function formatLargeNumber(num, isEuropean = false) {
 			
 			// Update value if it changed (only for format validation)
 			if (cleanValue !== value) {
-				console.log('Value changed during validation, updating');
 				var cursorPos = $input[0].selectionStart;
 				var valueBeforeCursor = value.substring(0, cursorPos);
 				var commasBeforeCursor = (valueBeforeCursor.match(/,/g) || []).length;
@@ -1139,7 +1129,6 @@ function formatLargeNumber(num, isEuropean = false) {
 				$input.addClass('math-mode');
 			}
 		}
-		console.log('=== INPUT EVENT END ===');
 	});
 
 	// Handle paste events for math operators
@@ -1250,9 +1239,7 @@ function formatLargeNumber(num, isEuropean = false) {
 	});
 
 	var $currency_inputs = $(".value-input"),
-		$btc_input = $(".bitcoin"),
-		currency,
-		btc_max_stock = 21000000
+		currency
 
 
 
@@ -1424,80 +1411,29 @@ function formatLargeNumber(num, isEuropean = false) {
 		console.log('First load:', firstLoad);
 		console.log('Preserve decimal:', preserveDecimal);
 		
-			var	btc_input_value = parseFloat($btc_input.val().replace(/,/g, '')).toFixed(8);
-		console.log('Initial BTC input value:', btc_input_value);
-
-			//set BTC max if user is editing BTC input
-			if( btc_input_value > btc_max_stock ){
-				btc_input_value = btc_max_stock
-			isProgrammaticUpdate = true;
-				$btc_input.val(btc_max_stock)
-			isProgrammaticUpdate = false;
-			}
-
-
-			// Get convertion to BTC from the current currency
-
-			if(source_currency == "sat"){
+		// Convert source value to BTC for calculations
+		var btc_value;
+		if(source_currency == "sat"){
 			console.log('Converting from SAT');
-			isProgrammaticUpdate = true;
-			var newBtcValue = parseFloat(source_val / RateToBTC[source_currency]).toFixed(8);
-			console.log('New BTC value (sat):', newBtcValue);
-			$btc_input.val(formatNumber(newBtcValue, 'btc', preserveDecimal));
-			isProgrammaticUpdate = false;
-			}
-			else if(source_currency == "btc"){
+			btc_value = parseFloat(source_val / RateToBTC[source_currency]).toFixed(8);
+		} else if(source_currency == "btc"){
 			console.log('Converting from BTC');
-			console.log('Source value received:', source_val);
-
-				// Update the BTC input with the calculated value from math expression
-				btc_input_value = parseFloat(source_val).toFixed(8);
-				console.log('Updated btc_input_value:', btc_input_value);
-				
-				// Format and update the BTC input field
-				isProgrammaticUpdate = true;
-				var formattedBtcValue = formatNumber(btc_input_value, 'btc', preserveDecimal);
-				console.log('Formatted BTC value:', formattedBtcValue);
-				$btc_input.val(formattedBtcValue);
-				
-				// Reset the flag after a short delay to ensure all events complete
-				setTimeout(function() {
-					isProgrammaticUpdate = false;
-					console.log('BTC input updated, isProgrammaticUpdate set to false');
-				}, 50);
-			}
-			else{
+			btc_value = parseFloat(source_val).toFixed(8);
+		} else {
 			console.log('Converting from fiat:', source_currency);
-			isProgrammaticUpdate = true;
-			var newBtcValue = parseFloat( parseFloat(source_val) / parseFloat(RateToBTC[source_currency]) ).toFixed(8);
-			console.log('New BTC value (fiat):', newBtcValue);
-			$btc_input.val(formatNumber(newBtcValue, 'btc', preserveDecimal));
-			isProgrammaticUpdate = false;
+			btc_value = parseFloat(parseFloat(source_val) / parseFloat(RateToBTC[source_currency])).toFixed(8);
+		}
+		
+		console.log('BTC value for calculations:', btc_value);
+
+		// Update all inputs based on the BTC value
+		$(".value-input").each(function(){
+			currency = $(this).data("currency");
+			
+			// Skip if this is the source input (to avoid overwriting user input)
+			if (currency === source_currency) {
+				return;
 			}
-
-			// Ensure we have a valid BTC value for calculations
-			if (isNaN(btc_input_value) || parseFloat(btc_input_value) <= 0) {
-				// Convert source value to BTC as fallback
-				if (source_currency === "sat") {
-					btc_input_value = parseFloat(source_val / RateToBTC[source_currency]).toFixed(8);
-				} else if (source_currency === "btc") {
-					btc_input_value = parseFloat(source_val).toFixed(8);
-				} else {
-					btc_input_value = parseFloat(parseFloat(source_val) / parseFloat(RateToBTC[source_currency])).toFixed(8);
-				}	
-				
-				// Update the BTC input with the calculated value
-				isProgrammaticUpdate = true;
-				$btc_input.val(formatNumber(btc_input_value, 'btc', preserveDecimal));
-				isProgrammaticUpdate = false;
-			}
-
-			// Updates BTC value
-			btc_input_value = parseFloat($btc_input.val().replace(/,/g, '')).toFixed(8);
-
-			// Updates all inputs depending on its rate to BTC
-			$(".value-input:not('.active')").each(function(){
-				currency = $(this).data("currency");
 			
 			// Check if currency is available (not 'n/a')
 			if (RateToBTC[currency] === 'n/a') {
@@ -1509,26 +1445,18 @@ function formatLargeNumber(num, isEuropean = false) {
 			// Remove n-a-value class if it was previously set
 			$(this).closest('.field.fiat').removeClass('n-a-value');
 			
-			// Always calculate the value if RateToBTC is available
-			var calculatedValue = RateToBTC[currency] * btc_input_value;
+			// Calculate the value for this currency
+			var calculatedValue = RateToBTC[currency] * btc_value;
 			
 			isProgrammaticUpdate = true;
-			// Format the value properly based on currency type using the formatNumber function
+			// Format the value properly based on currency type
 			var formattedValue = formatNumber(calculatedValue, currency);
-				$(this).val(formattedValue);
+			$(this).val(formattedValue);
 			isProgrammaticUpdate = false;
-			
-				(( RateToBTC['sat'] * btc_input_value ) == 1) ? $("#sats-label").text('⚪️ sat') : $("#sats-label").text('⚪️ sats');
-			})
-			
-			// Special handling for BTC input when it's the source currency
-			if (source_currency === 'btc') {
-				// Update the BTC input with the formatted value
-				isProgrammaticUpdate = true;
-				var formattedBtcValue = formatNumber(source_val, 'btc', preserveDecimal);
-				$btc_input.val(formattedBtcValue);
-				isProgrammaticUpdate = false;
-			}
+		});
+		
+		// Update sats label
+		(( RateToBTC['sat'] * btc_value ) == 1) ? $("#sats-label").text('⚪️ sat') : $("#sats-label").text('⚪️ sats');
 
 		// Adjust fiat input sizes after all values are updated
 		adjustFiatInputSizes();
@@ -1542,44 +1470,28 @@ function formatLargeNumber(num, isEuropean = false) {
 		$currency_inputs.keyup(function(e) {
 		// Skip if this is a programmatic update or if it's the Enter key
 		if (isProgrammaticUpdate || e.keyCode === 13) {
-			console.log('KEYUP: Skipping due to programmatic update or Enter key');
 			return;
 		}
 		
 		var inputValue = $(this).val();
 		var source_currency = $(this).data("currency");
-		
-		console.log('=== KEYUP EVENT ===');
-		console.log('Input value:', inputValue);
-		console.log('Source currency:', source_currency);
-		console.log('Is programmatic update:', isProgrammaticUpdate);
-		console.log('Input element:', this);
-		console.log('Key pressed:', e.key);
 
 		// Check if this is a math expression
 		if (/[\+\-\*\/\(\)]/.test(inputValue.replace(/[, ]/g, ''))) {
-			console.log('Math expression detected');
 			$(this).addClass("active");
 			
 			// Only process complete math expressions (not while typing)
 			// Check if the expression ends with a number, not an operator
 			if (!/[\+\-\*\/\(\)]$/.test(inputValue.replace(/[, ]/g, ''))) {
-				console.log('Complete math expression detected, calculating');
 				// Parse math expression
 				var calculatedValue = parseMathExpression(inputValue);
-				console.log('Parsed math result:', calculatedValue);
 				
 				if (calculatedValue !== null) {
-					console.log('Math expression is valid, calculating conversion');
 					// Use calculated value for conversion
 					var source_val = parseFloat(calculatedValue).toFixed(8);
-					console.log('Source value for conversion:', source_val);
-					
 					calcConversion( source_val, source_currency, false, false );
 					writenNumber(european);
 				}
-			} else {
-				console.log('Incomplete math expression, skipping conversion');
 			}
 			return; // Skip regular processing for math expressions
 		}
@@ -1587,11 +1499,9 @@ function formatLargeNumber(num, isEuropean = false) {
 		// Check if user is actively typing a decimal (preserve decimal point)
 		var preserveDecimal = inputValue.endsWith('.');
 		
-		console.log('Regular number input detected');
 		// Parse regular number input
 		var source_val = unformatNumber(inputValue);
 		source_val = parseFloat(source_val).toFixed(8);
-		console.log('Unformatted source value:', source_val);
 
 		$(this).addClass("active");
 		calcConversion( source_val, source_currency, false, preserveDecimal );
@@ -1599,8 +1509,6 @@ function formatLargeNumber(num, isEuropean = false) {
 		writenNumber(european);
 
 		// URL parameters are now updated in calcConversion
-		console.log('=== KEYUP EVENT END ===');
-
 		});
 
 
