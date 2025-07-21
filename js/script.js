@@ -143,7 +143,10 @@ function formatLargeNumber(num, isEuropean = false) {
 		if (savedOrder && savedOrder.length > 0) {
 			applyOrder(savedOrder);
 		}
-		
+
+		// Detect touch device
+		var isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+
 		// Initialize SortableJS
 		var fiatContainer = document.getElementById('fiat-container');
 		if (fiatContainer) {
@@ -154,7 +157,9 @@ function formatLargeNumber(num, isEuropean = false) {
 				dragClass: 'sortable-drag',
 				onEnd: function(evt) {
 					saveOrder();
-				}
+				},
+				delay: isTouchDevice ? 200 : 0, // 200ms long-press delay for touch devices
+				touchStartThreshold: 5 // (optional) minimal movement before drag
 			});
 		}
 	}
