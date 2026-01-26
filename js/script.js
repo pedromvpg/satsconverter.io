@@ -96,8 +96,8 @@ function formatLargeNumber(num, isEuropean = false) {
 					// Check that the expression ends with a number, not an operator
 					if (!/[\+\-\*\/]$/.test(input)) {
 						console.log('Expression ends with number, evaluating');
-						// Check for division by zero
-						if (input.includes('/0') && !input.includes('/0.')) {
+						// Check for division by zero (use regex to avoid false positives like /10, /20)
+						if (/\/0(?!\d)/.test(input) && !input.includes('/0.')) {
 							console.log('Division by zero detected, returning null');
 							return null; // Division by zero
 						}
@@ -523,9 +523,9 @@ function formatLargeNumber(num, isEuropean = false) {
 						"usd", "eur", "gbp", "cny", "jpy", "cad",
 						"rub", "chf", "brl", "aed", "try", "aud",
 						"mxn", "ils", "zar", "thb", 'inr', 'sek',
-						'sar', "ars"
+						'sar', "ars", "nok", "dkk", "pln", "xau", "xag"
 					];
-					
+
 					// Check for sats first (legacy support)
 					if (urlParams.get('sats')) {
 						anchorCurrency = 'sat';
@@ -610,7 +610,12 @@ function formatLargeNumber(num, isEuropean = false) {
 							zar: data.ZAR,
 							sek: data.SEK,
 							sar: data.SAR,
-							ars: data.ARS
+							ars: data.ARS,
+							nok: data.NOK,
+							dkk: data.DKK,
+							pln: data.PLN,
+							xau: data.XAU,
+							xag: data.XAG
 						};
 						
 						// Update sats per currency display
@@ -706,9 +711,9 @@ function formatLargeNumber(num, isEuropean = false) {
 					"usd", "eur", "gbp", "cny", "jpy", "cad",
 					"rub", "chf", "brl", "aed", "try", "aud",
 					"mxn", "ils", "zar", "thb", 'inr', 'sek',
-					'sar', "ars"
+					'sar', "ars", "nok", "dkk", "pln", "xau", "xag"
 				];
-				
+
 				// Check for sats first (legacy support)
 				if (urlParams.get('sats')) {
 					anchorCurrency = 'sat';
@@ -724,7 +729,7 @@ function formatLargeNumber(num, isEuropean = false) {
 						}
 					}
 				}
-				
+
 				// If no URL parameter found, use the first non-zero input
 				if (!anchorCurrency) {
 					$(".value-input").each(function() {
@@ -829,14 +834,18 @@ function formatLargeNumber(num, isEuropean = false) {
 		}
 	}
 
-	// Function to fetch current prices
-	function fetchCurrentPrices(skipUrlParams = false) {
+	// Function to fetch current prices with retry logic
+	function fetchCurrentPrices(skipUrlParams = false, retryCount = 0) {
 		var priceURL = "https://pvxg.net/bitcoin-price/index.php";
-		
+		var maxRetries = 2;
+
 		$.getJSON(priceURL, function(data) {
 			// Remove n-a-value classes from all fiat fields when switching to current prices
 			$('.field.fiat').removeClass('n-a-value loading');
-			
+
+			// Remove any error message that might have been shown
+			$('#price-error-message').remove();
+
 			RateToBTC = {
 				sat: 100000000,
 				btc: 1,
@@ -859,23 +868,70 @@ function formatLargeNumber(num, isEuropean = false) {
 				zar: data.ZAR,
 				sek: data.SEK,
 				sar: data.SAR,
-				ars: data.ARS
+				ars: data.ARS,
+				nok: data.NOK,
+				dkk: data.DKK,
+				pln: data.PLN,
+				xau: data.XAU,
+				xag: data.XAG
 			};
-			
+
 			// Update sats per currency display
 			updateSatsPerCurrency();
-			
+
 			// Force clear any n/a values that should now be available
 			forceClearNAValues();
-			
+
 			// Load URL parameters after prices are available (only if not in historical mode and not skipped)
 			var urlParams = new URLSearchParams(window.location.search);
 			if (!urlParams.get('timestamp') && !skipUrlParams) {
-			loadUrlParameters();
-			} else {
+				loadUrlParameters();
 			}
-			
+
 		}).fail(function(xhr, status, error) {
+			// Retry logic
+			if (retryCount < maxRetries) {
+				setTimeout(function() {
+					fetchCurrentPrices(skipUrlParams, retryCount + 1);
+				}, 1000 * (retryCount + 1)); // Exponential backoff: 1s, 2s
+				return;
+			}
+
+			// All retries failed - load URL parameters as fallback
+			var urlParams = new URLSearchParams(window.location.search);
+			if (!urlParams.get('timestamp') && !skipUrlParams) {
+				loadUrlParameters();
+			}
+
+			// Show non-intrusive error message
+			if ($('#price-error-message').length === 0) {
+				var errorMsg = $('<div>', {
+					id: 'price-error-message',
+					text: 'Unable to fetch current prices. Using cached values.',
+					css: {
+						position: 'fixed',
+						bottom: '20px',
+						left: '50%',
+						transform: 'translateX(-50%)',
+						background: '#333',
+						color: '#fff',
+						padding: '10px 20px',
+						borderRadius: '4px',
+						fontSize: '12px',
+						zIndex: 10000,
+						opacity: 0
+					}
+				});
+				$('body').append(errorMsg);
+				errorMsg.animate({ opacity: 1 }, 300);
+
+				// Auto-dismiss after 5 seconds
+				setTimeout(function() {
+					errorMsg.animate({ opacity: 0 }, 300, function() {
+						$(this).remove();
+					});
+				}, 5000);
+			}
 		});
 	}
 
@@ -952,21 +1008,21 @@ function formatLargeNumber(num, isEuropean = false) {
 			var result = Math.round(cleanValue || 0).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
 			console.log('SAT result:', result);
 			return result;
-		} else if (currency === "btc") {
-			console.log('Formatting BTC value');
-			// Bitcoin: up to 8 decimal places, but trim trailing zeros
+		} else if (currency === "btc" || currency === "xau" || currency === "xag") {
+			console.log('Formatting BTC/XAU/XAG value');
+			// Bitcoin and precious metals: up to 8 decimal places, but trim trailing zeros
 			var btcValue = (cleanValue || 0).toFixed(8);
-			console.log('BTC after toFixed(8):', btcValue);
+			console.log('Value after toFixed(8):', btcValue);
 			// Remove trailing zeros
 			btcValue = btcValue.replace(/0+$/, ''); // Remove trailing zeros
-			console.log('BTC after removing trailing zeros:', btcValue);
-			
+			console.log('Value after removing trailing zeros:', btcValue);
+
 			// Only remove trailing decimal point if not preserving decimal
 			if (!preserveDecimal) {
 				btcValue = btcValue.replace(/\.$/, ''); // Remove trailing decimal point
-				console.log('BTC after removing trailing decimal:', btcValue);
+				console.log('Value after removing trailing decimal:', btcValue);
 			}
-			
+
 			// Add comma separators to the whole number part
 			if (btcValue.includes('.')) {
 				var parts = btcValue.split('.');
@@ -975,7 +1031,7 @@ function formatLargeNumber(num, isEuropean = false) {
 			} else {
 				btcValue = btcValue.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
 			}
-			console.log('BTC final result:', btcValue);
+			console.log('Final result:', btcValue);
 			return btcValue;
 		} else {
 			console.log('Formatting fiat value');
@@ -1069,6 +1125,18 @@ function formatLargeNumber(num, isEuropean = false) {
 
 	// Check fiat input sizes after initial formatting
 	adjustFiatInputSizes();
+
+	// Handle focus event - clear field if value is zero
+	$(".value-input").on('focus', function(e) {
+		var $input = $(this);
+		var value = $input.val();
+		var numericValue = unformatNumber(value);
+
+		// Clear the field if value is zero (to avoid "032.23" when typing)
+		if (numericValue === 0) {
+			$input.val('');
+		}
+	});
 
 	// Handle input without real-time formatting
 	$(".value-input").on('input', function(e) {
@@ -1168,17 +1236,21 @@ function formatLargeNumber(num, isEuropean = false) {
 			var value = $input.val();
 			var currency = $input.data("currency");
 			console.log('Enter key pressed for currency:', currency, 'value:', value);
-			
+
+			var finalValue = null;
+
 			// Check if this is a math expression
 			if (/[\+\-\*\/\(\)]/.test(value)) {
 				var calculatedValue = parseMathExpression(value);
-				
+
 				if (calculatedValue !== null) {
+					finalValue = calculatedValue;
 					// Format the calculated result
 					isProgrammaticUpdate = true;
 					var formattedResult = formatNumber(calculatedValue, currency);
 					$input.val(formattedResult);
 					$input.removeClass('math-mode');
+					isProgrammaticUpdate = false;
 				}
 			} else {
 				// Trim zeros before formatting
@@ -1186,20 +1258,23 @@ function formatLargeNumber(num, isEuropean = false) {
 				if (trimmedValue !== value) {
 					$input.val(trimmedValue);
 				}
-				
+
+				finalValue = unformatNumber(trimmedValue);
 				// Format the number
 				isProgrammaticUpdate = true;
 				var formattedResult = formatNumber(trimmedValue, currency);
 				$input.val(formattedResult);
+				isProgrammaticUpdate = false;
 			}
-			
+
+			// Trigger conversion to update all other fields
+			if (finalValue !== null) {
+				calcConversion(finalValue, currency, false);
+				writenNumber(european);
+			}
+
 			// Blur the field
 			$input.blur();
-			
-			// Reset the flag after a short delay to allow blur event to complete
-			setTimeout(function() {
-				isProgrammaticUpdate = false;
-			}, 10);
 		}
 	});
 
@@ -1210,23 +1285,30 @@ function formatLargeNumber(num, isEuropean = false) {
 			console.log('Blur event skipped due to programmatic update');
 			return; // Skip if this is a programmatic update
 		}
-		
+
 		var $input = $(this);
 		var value = $input.val();
 		var currency = $input.data("currency");
 		console.log('Blur event processing for currency:', currency, 'value:', value);
-		
+
+		var finalValue = null;
+
 		// Check if this is a math expression
 		if (/[\+\-\*\/\(\)]/.test(value)) {
 			var calculatedValue = parseMathExpression(value);
-			
+
 			if (calculatedValue !== null) {
+				finalValue = calculatedValue;
 				// Format the calculated result
 				isProgrammaticUpdate = true;
 				var formattedResult = formatNumber(calculatedValue, currency);
 				$input.val(formattedResult);
 				$input.removeClass('math-mode');
 				isProgrammaticUpdate = false;
+
+				// Trigger conversion to update all other fields
+				calcConversion(finalValue, currency, false);
+				writenNumber(european);
 			}
 		} else if (value && value.trim() !== '') {
 			// Trim zeros before formatting
@@ -1234,7 +1316,7 @@ function formatLargeNumber(num, isEuropean = false) {
 			if (trimmedValue !== value) {
 				$input.val(trimmedValue);
 			}
-			
+
 			// Format the number
 			isProgrammaticUpdate = true;
 			var formattedResult = formatNumber(trimmedValue, currency);
@@ -1253,13 +1335,26 @@ function formatLargeNumber(num, isEuropean = false) {
 	// Check if we have a timestamp in URL for historical data
 	var urlParams = new URLSearchParams(window.location.search);
 	var timestamp = urlParams.get('timestamp');
-	
+
+	// Validate timestamp if present
+	var validTimestamp = false;
+	var parsedTimestamp = null;
 	if (timestamp) {
+		parsedTimestamp = parseInt(timestamp, 10);
+		var minTimestamp = 1231006505; // Bitcoin genesis block (January 3, 2009)
+		var maxTimestamp = Math.floor(Date.now() / 1000) + 86400; // Tomorrow
+
+		if (!isNaN(parsedTimestamp) && parsedTimestamp >= minTimestamp && parsedTimestamp <= maxTimestamp) {
+			validTimestamp = true;
+		}
+	}
+
+	if (validTimestamp) {
 		// Fetch historical prices with anchor preservation
 		// For initial load, we'll use the URL parameters as anchor
 		var anchorCurrency = null;
 		var anchorAmount = null;
-		
+
 		// Check for sats parameter first (legacy support)
 		if (urlParams.get('sats')) {
 			anchorCurrency = 'sat';
@@ -1270,9 +1365,9 @@ function formatLargeNumber(num, isEuropean = false) {
 				"usd", "eur", "gbp", "cny", "jpy", "cad",
 				"rub", "chf", "brl", "aed", "try", "aud",
 				"mxn", "ils", "zar", "thb", 'inr', 'sek',
-				'sar', "ars"
+				'sar', "ars", "nok", "dkk", "pln", "xau", "xag"
 			];
-			
+
 			for (var i = 0; i < currencyCodes.length; i++) {
 				var code = currencyCodes[i];
 				if (urlParams.get(code)) {
@@ -1282,16 +1377,16 @@ function formatLargeNumber(num, isEuropean = false) {
 				}
 			}
 		}
-		
+
 		// Default to 1 USD if no anchor found
 		if (!anchorCurrency) {
 			anchorCurrency = 'usd';
 			anchorAmount = 1;
 		}
-		
-		fetchHistoricalPricesWithAnchor(timestamp, anchorCurrency, anchorAmount);
+
+		fetchHistoricalPricesWithAnchor(parsedTimestamp, anchorCurrency, anchorAmount);
 	} else {
-		// Fetch current prices
+		// Fetch current prices (also handles invalid timestamp)
 		fetchCurrentPrices(false);
 	}
 
@@ -1302,52 +1397,83 @@ function formatLargeNumber(num, isEuropean = false) {
 		}
 	}, (1000*60*5));
 
+	// Helper function to parse and validate numeric URL parameters
+	function parseNumericParam(value, defaultValue) {
+		if (!value) return defaultValue;
+		var parsed = parseFloat(value);
+		if (isNaN(parsed) || !isFinite(parsed) || parsed < 0) {
+			return defaultValue;
+		}
+		return parsed;
+	}
+
 	// Handle URL parameters for initial loading - moved to after price fetching
 	function loadUrlParameters() {
-		
+
 		// Check for sats parameter first (legacy support)
 		if (urlParams.get('sats')) {
 			var loadedCurrency = 'sat';
-			var loadedValue = urlParams.get('sats');
-			
+			var loadedValue = parseNumericParam(urlParams.get('sats'), null);
+
+			// If invalid, fall through to default
+			if (loadedValue === null) {
+				$('#input_sat').val('1');
+				calcConversion(1, 'sat', false);
+				writenNumber(european);
+				return;
+			}
+
 			$('#input_' + loadedCurrency).val(loadedValue);
-			calcConversion(parseFloat(loadedValue), loadedCurrency, false);
+			calcConversion(loadedValue, loadedCurrency, false);
 			writenNumber(european);
 			return; // Exit early if sats parameter found
 		}
-		
+
 		// Check for BTC parameter
 		if (urlParams.get('btc')) {
 			var loadedCurrency = 'btc';
-			var loadedValue = urlParams.get('btc');
-			
+			var loadedValue = parseNumericParam(urlParams.get('btc'), null);
+
+			// If invalid, fall through to default
+			if (loadedValue === null) {
+				$('#input_sat').val('1');
+				calcConversion(1, 'sat', false);
+				writenNumber(european);
+				return;
+			}
+
 			$('#input_' + loadedCurrency).val(loadedValue);
-			calcConversion(parseFloat(loadedValue), loadedCurrency, false);
+			calcConversion(loadedValue, loadedCurrency, false);
 			writenNumber(european);
 			return; // Exit early if btc parameter found
 		}
-		
+
 		// Check for other currency parameters
 		var currencyCodes = [
 			"usd", "eur", "gbp", "cny", "jpy", "cad",
 			"rub", "chf", "brl", "aed", "try", "aud",
 			"mxn", "ils", "zar", "thb", 'inr', 'sek',
-			'sar', /*'vef',*/ "ars"
+			'sar', "ars", "nok", "dkk", "pln", "xau", "xag"
 		];
-		
+
 		for (var i = 0; i < currencyCodes.length; i++) {
 			var code = currencyCodes[i];
 			if (urlParams.get(code)) {
 				var loadedCurrency = code;
-				var loadedValue = urlParams.get(code);
-				
+				var loadedValue = parseNumericParam(urlParams.get(code), null);
+
+				// If invalid, fall through to default
+				if (loadedValue === null) {
+					break; // Exit loop and fall through to default
+				}
+
 				$('#input_' + loadedCurrency).val(loadedValue);
-				calcConversion(parseFloat(loadedValue), loadedCurrency, false);
+				calcConversion(loadedValue, loadedCurrency, false);
 				writenNumber(european);
 				return; // Exit early if currency parameter found
 			}
 		}
-		
+
 		// Set default value of 1 sat when no parameters are found
 		$('#input_sat').val('1');
 		calcConversion(1, 'sat', false);
@@ -1361,14 +1487,27 @@ function formatLargeNumber(num, isEuropean = false) {
         "usd", "eur", "gbp", "cny", "jpy", "cad",
         "rub", "chf", "brl", "aed", "try", "aud",
         "mxn", "ils", "zar", "thb", 'inr', 'sek',
-				'sar', /*'vef',*/ "ars"
+				'sar', "ars", "nok", "dkk", "pln", "xau", "xag"
     ];
 
     currencyCodes.forEach(function(code) {
+			// Special labels for precious metals
+			var label = code.toUpperCase();
+			if (code === 'xau') label = 'XAU (Gold oz)';
+			if (code === 'xag') label = 'XAG (Silver oz)';
+
 			if (RateToBTC[code] && RateToBTC[code] !== 'n/a') {
         var satPerCurrency = 1 / (RateToBTC[code] / 1) * 100000000;
+				var formattedSats = Math.round(satPerCurrency).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
 				var satsPerElement = $('<div>', {
-		        html: "<span class='satsfiat'>"+satPerCurrency.toFixed(0)+"</span> sats per 1 " + code.toUpperCase()
+		        html: "<span class='satsfiat'>"+formattedSats+"</span> sats per 1 " + label
+		    });
+		    $("#satsfiats").append(satsPerElement);
+			} else {
+				// Show n/a currencies with faded style
+				var satsPerElement = $('<div>', {
+					class: 'satsfiat-na',
+		        html: "<span class='satsfiat'>n/a</span> sats per 1 " + label
 		    });
 		    $("#satsfiats").append(satsPerElement);
 			}
@@ -1379,7 +1518,7 @@ function formatLargeNumber(num, isEuropean = false) {
 	function updateUrlParameters(source_currency, source_val) {
 		var url = new URL(window.location.href);
 		var currentOrder = url.searchParams.get('order');
-		
+
 		// Clear all existing currency parameters but preserve order
 		url.searchParams.delete('sats');
 		url.searchParams.delete('btc');
@@ -1387,12 +1526,12 @@ function formatLargeNumber(num, isEuropean = false) {
 			"usd", "eur", "gbp", "cny", "jpy", "cad",
 			"rub", "chf", "brl", "aed", "try", "aud",
 			"mxn", "ils", "zar", "thb", 'inr', 'sek',
-			'sar', /*'vef',*/ "ars"
+			'sar', "ars", "nok", "dkk", "pln", "xau", "xag"
 		];
 		currencyCodes.forEach(function(code) {
 			url.searchParams.delete(code);
 		});
-		
+
 		// Restore order parameter if it existed
 		if (currentOrder) {
 			url.searchParams.set('order', currentOrder);
@@ -1401,8 +1540,9 @@ function formatLargeNumber(num, isEuropean = false) {
 		// Update URL with the correct currency parameter
 		if (source_currency === 'sat') {
 			url.searchParams.set('sats', parseFloat(source_val).toFixed(0));
-		} else if (source_currency === 'btc') {
-			url.searchParams.set('btc', parseFloat(source_val).toFixed(8));
+		} else if (source_currency === 'btc' || source_currency === 'xau' || source_currency === 'xag') {
+			// BTC and precious metals need more decimal places
+			url.searchParams.set(source_currency, parseFloat(source_val).toFixed(8));
 		} else {
 			url.searchParams.set(source_currency, parseFloat(source_val).toFixed(2));
 		}
@@ -1484,26 +1624,18 @@ function formatLargeNumber(num, isEuropean = false) {
 		// Check if this is a math expression
 		if (/[\+\-\*\/\(\)]/.test(inputValue.replace(/[, ]/g, ''))) {
 			$(this).addClass("active");
-			
-			// Only process complete math expressions (not while typing)
-			// Check if the expression ends with a number, not an operator
-			if (!/[\+\-\*\/\(\)]$/.test(inputValue.replace(/[, ]/g, ''))) {
-				// Parse math expression
-				var calculatedValue = parseMathExpression(inputValue);
-				
-				if (calculatedValue !== null) {
-					// Use calculated value for conversion
-					var source_val = parseFloat(calculatedValue).toFixed(8);
-					calcConversion( source_val, source_currency, false, false );
-					writenNumber(european);
-				}
-			}
-			return; // Skip regular processing for math expressions
+			// Don't evaluate math expressions on keyup - wait for Enter key
+			// This prevents premature evaluation while user is still typing (e.g., typing 5*100)
+			return;
 		}
 
 		// Check if user is actively typing a decimal (preserve decimal point)
 		var preserveDecimal = inputValue.endsWith('.');
-		
+		if (preserveDecimal) {
+			$(this).addClass("active");
+			return; // Wait for more input after decimal point
+		}
+
 		// Parse regular number input
 		var source_val = unformatNumber(inputValue);
 		source_val = parseFloat(source_val).toFixed(8);
@@ -1623,7 +1755,7 @@ function formatLargeNumber(num, isEuropean = false) {
 		}
 		
 		// Set unsupported currencies to 'n/a' (these are not available in the historical API)
-		var unsupportedCurrencies = ['cny', 'rub', 'brl', 'aed', 'try', 'mxn', 'ils', 'zar', 'thb', 'inr', 'sek', 'sar', 'ars'];
+		var unsupportedCurrencies = ['cny', 'rub', 'brl', 'aed', 'try', 'mxn', 'ils', 'zar', 'thb', 'inr', 'sek', 'sar', 'ars', 'nok', 'dkk', 'pln', 'xau', 'xag'];
 		unsupportedCurrencies.forEach(function(currency) {
 			RateToBTC[currency] = 'n/a';
 			// Add CSS class to visually indicate n/a status
@@ -1654,52 +1786,62 @@ function formatLargeNumber(num, isEuropean = false) {
 
 	// Function to reset the page to defaults
 	function resetToDefaults() {
-		
-		// Set URL to default sats=1
+
+		// Selectively delete currency/value params, preserve user preferences (order, written, european)
 		var url = new URL(window.location.href);
-		url.search = 'sats=1';
+
+		// Delete currency params individually
+		url.searchParams.delete('sats');
+		url.searchParams.delete('btc');
+		url.searchParams.delete('timestamp');
+
+		// Delete all fiat currency params
+		var currencyCodes = [
+			"usd", "eur", "gbp", "cny", "jpy", "cad",
+			"rub", "chf", "brl", "aed", "try", "aud",
+			"mxn", "ils", "zar", "thb", 'inr', 'sek',
+			'sar', "ars", "nok", "dkk", "pln", "xau", "xag"
+		];
+		currencyCodes.forEach(function(code) {
+			url.searchParams.delete(code);
+		});
+
+		// Set default sats=1 (preserves order, written, european params)
+		url.searchParams.set('sats', '1');
 		window.history.replaceState({}, '', url);
-		
-		// Reset checkboxes to unchecked
-		$('#written-number-check').prop('checked', false);
-		$('#european-check').prop('checked', false);
-		
-		// Clear written numbers
-		$(".writen-number").text('').animate({opacity: 0}, 100).animate({fontSize: '0px'}, 100);
-		
+
 		// Remove any n-a-value classes
 		$('.field.fiat').removeClass('n-a-value loading');
-		
-		// Reset currency order to default
-		resetCurrencyOrder();
-		
+
 		// Reset to current prices (today)
 		updateButtonText(new Date());
-		
+
 		// Fetch current prices and set default values (skip URL parameters)
 		fetchCurrentPrices(true);
-		
+
 		// Set default value of 1 sat after prices are loaded
 		setTimeout(function() {
 			// Set the sats input value directly
 			$('#input_sat').val('1');
 			// Calculate conversions based on 1 sat
 			calcConversion(1, 'sat', false);
-			writenNumber(false);
+			// Update written numbers based on current checkbox state
+			writenNumber(european);
 		}, 200);
-		
+
 	}
 
 	// Function to reset currency order to default
 	function resetCurrencyOrder() {
 		// Default order of currencies (as they appear in the HTML)
 		var defaultOrder = [
-			'usd', 'eur', 'gbp', 'cny', 'jpy', 'cad', 'rub', 'chf', 'brl', 'aed', 
-			'try', 'aud', 'mxn', 'ils', 'zar', 'thb', 'inr', 'sek', 'sar', 'ars'
+			'usd', 'eur', 'gbp', 'cny', 'jpy', 'cad', 'rub', 'chf', 'brl', 'aed',
+			'try', 'aud', 'mxn', 'ils', 'zar', 'thb', 'inr', 'sek', 'sar', 'ars',
+			'nok', 'dkk', 'pln', 'xau', 'xag'
 		];
-		
+
 		var container = $('#fiat-container');
-		
+
 		// Reorder elements to match default order
 		defaultOrder.forEach(function(currency) {
 			var element = $('#input_' + currency).closest('.field.fiat');
@@ -1707,7 +1849,7 @@ function formatLargeNumber(num, isEuropean = false) {
 				container.append(element);
 			}
 		});
-		
+
 	}
 
 })
