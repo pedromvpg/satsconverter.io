@@ -163,6 +163,14 @@ div#satsfiats div {
     box-sizing: border-box;
 }
 
+div#satsfiats div.satsfiat-na {
+    opacity: 0.4;
+}
+
+div#satsfiats div.satsfiat-na span {
+    color: #666;
+}
+
 div#satsfiats span {
    display:block;
    color:#fff;
@@ -489,6 +497,8 @@ explicitly, e.g.
   top:0;
   position:sticky;
   border-top: #111 1px solid;
+  z-index: 100;
+  background: #000;
 }
 
 .fiat{
@@ -792,6 +802,11 @@ explicitly, e.g.
 }
 
 /* Currency fields with n/a values */
+.field.fiat.n-a-value {
+  z-index: 1;
+  position: relative;
+}
+
 .field.fiat.n-a-value * {
   opacity: 0.5;
   transition: opacity 0.3s ease;
