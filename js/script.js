@@ -168,13 +168,22 @@ function formatLargeNumber(num, isEuropean = false) {
 		// Try URL parameters only
 		var urlParams = new URLSearchParams(window.location.search);
 		var orderParam = urlParams.get('order');
-		
+
 		if (orderParam) {
-			return orderParam.split(',').filter(function(currency) {
+			var specifiedCurrencies = orderParam.split(',').filter(function(currency) {
 				return document.getElementById('input_' + currency);
 			});
+
+			if (specifiedCurrencies.length > 0) {
+				// Promote specified currencies to the top, append remaining in DOM order
+				var allCurrencies = getCurrentOrder();
+				var remaining = allCurrencies.filter(function(c) {
+					return specifiedCurrencies.indexOf(c) === -1;
+				});
+				return specifiedCurrencies.concat(remaining);
+			}
 		}
-		
+
 		// Return default order (current DOM order)
 		return getCurrentOrder();
 	}
