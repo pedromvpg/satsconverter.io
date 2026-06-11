@@ -523,7 +523,7 @@ function formatLargeNumber(num, isEuropean = false) {
 						"usd", "eur", "gbp", "cny", "jpy", "cad",
 						"rub", "chf", "brl", "aed", "try", "aud",
 						"mxn", "ils", "zar", "thb", 'inr', 'sek',
-						'sar', "ars", "nok", "dkk", "pln", "xau", "xag"
+						'czk', "ars", "nok", "dkk", "pln", "xau", "xag"
 					];
 
 					// Check for sats first (legacy support)
@@ -609,7 +609,7 @@ function formatLargeNumber(num, isEuropean = false) {
 							inr: data.INR,
 							zar: data.ZAR,
 							sek: data.SEK,
-							sar: data.SAR,
+							czk: data.CZK,
 							ars: data.ARS,
 							nok: data.NOK,
 							dkk: data.DKK,
@@ -711,7 +711,7 @@ function formatLargeNumber(num, isEuropean = false) {
 					"usd", "eur", "gbp", "cny", "jpy", "cad",
 					"rub", "chf", "brl", "aed", "try", "aud",
 					"mxn", "ils", "zar", "thb", 'inr', 'sek',
-					'sar', "ars", "nok", "dkk", "pln", "xau", "xag"
+					'czk', "ars", "nok", "dkk", "pln", "xau", "xag"
 				];
 
 				// Check for sats first (legacy support)
@@ -867,7 +867,7 @@ function formatLargeNumber(num, isEuropean = false) {
 				inr: data.INR,
 				zar: data.ZAR,
 				sek: data.SEK,
-				sar: data.SAR,
+				czk: data.CZK,
 				ars: data.ARS,
 				nok: data.NOK,
 				dkk: data.DKK,
@@ -1365,7 +1365,7 @@ function formatLargeNumber(num, isEuropean = false) {
 				"usd", "eur", "gbp", "cny", "jpy", "cad",
 				"rub", "chf", "brl", "aed", "try", "aud",
 				"mxn", "ils", "zar", "thb", 'inr', 'sek',
-				'sar', "ars", "nok", "dkk", "pln", "xau", "xag"
+				'czk', "ars", "nok", "dkk", "pln", "xau", "xag"
 			];
 
 			for (var i = 0; i < currencyCodes.length; i++) {
@@ -1453,7 +1453,7 @@ function formatLargeNumber(num, isEuropean = false) {
 			"usd", "eur", "gbp", "cny", "jpy", "cad",
 			"rub", "chf", "brl", "aed", "try", "aud",
 			"mxn", "ils", "zar", "thb", 'inr', 'sek',
-			'sar', "ars", "nok", "dkk", "pln", "xau", "xag"
+			'czk', /*'vef',*/ "ars", "nok", "dkk", "pln", "xau", "xag"
 		];
 
 		for (var i = 0; i < currencyCodes.length; i++) {
@@ -1487,7 +1487,7 @@ function formatLargeNumber(num, isEuropean = false) {
         "usd", "eur", "gbp", "cny", "jpy", "cad",
         "rub", "chf", "brl", "aed", "try", "aud",
         "mxn", "ils", "zar", "thb", 'inr', 'sek',
-				'sar', "ars", "nok", "dkk", "pln", "xau", "xag"
+				'czk', /*'vef',*/ "ars", "nok", "dkk", "pln", "xau", "xag"
     ];
 
     currencyCodes.forEach(function(code) {
@@ -1526,7 +1526,7 @@ function formatLargeNumber(num, isEuropean = false) {
 			"usd", "eur", "gbp", "cny", "jpy", "cad",
 			"rub", "chf", "brl", "aed", "try", "aud",
 			"mxn", "ils", "zar", "thb", 'inr', 'sek',
-			'sar', "ars", "nok", "dkk", "pln", "xau", "xag"
+			'czk', /*'vef',*/ "ars", "nok", "dkk", "pln", "xau", "xag"
 		];
 		currencyCodes.forEach(function(code) {
 			url.searchParams.delete(code);
@@ -1755,7 +1755,7 @@ function formatLargeNumber(num, isEuropean = false) {
 		}
 		
 		// Set unsupported currencies to 'n/a' (these are not available in the historical API)
-		var unsupportedCurrencies = ['cny', 'rub', 'brl', 'aed', 'try', 'mxn', 'ils', 'zar', 'thb', 'inr', 'sek', 'sar', 'ars', 'nok', 'dkk', 'pln', 'xau', 'xag'];
+		var unsupportedCurrencies = ['cny', 'rub', 'brl', 'aed', 'try', 'mxn', 'ils', 'zar', 'thb', 'inr', 'sek', 'czk', 'ars', 'nok', 'dkk', 'pln', 'xau', 'xag'];
 		unsupportedCurrencies.forEach(function(currency) {
 			RateToBTC[currency] = 'n/a';
 			// Add CSS class to visually indicate n/a status
@@ -1800,7 +1800,7 @@ function formatLargeNumber(num, isEuropean = false) {
 			"usd", "eur", "gbp", "cny", "jpy", "cad",
 			"rub", "chf", "brl", "aed", "try", "aud",
 			"mxn", "ils", "zar", "thb", 'inr', 'sek',
-			'sar', "ars", "nok", "dkk", "pln", "xau", "xag"
+			'czk', "ars", "nok", "dkk", "pln", "xau", "xag"
 		];
 		currencyCodes.forEach(function(code) {
 			url.searchParams.delete(code);
@@ -1836,7 +1836,7 @@ function formatLargeNumber(num, isEuropean = false) {
 		// Default order of currencies (as they appear in the HTML)
 		var defaultOrder = [
 			'usd', 'eur', 'gbp', 'cny', 'jpy', 'cad', 'rub', 'chf', 'brl', 'aed',
-			'try', 'aud', 'mxn', 'ils', 'zar', 'thb', 'inr', 'sek', 'sar', 'ars',
+			'try', 'aud', 'mxn', 'ils', 'zar', 'thb', 'inr', 'sek', 'czk', 'ars',
 			'nok', 'dkk', 'pln', 'xau', 'xag'
 		];
 
